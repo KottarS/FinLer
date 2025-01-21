@@ -1,43 +1,82 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const mainText = document.getElementById('main-text');
-    const choiceContainer = document.getElementById('choice-container');
-    
-    // �������� �����
-    const clickSound = new Audio('click.mp3');
-    const beepSound = new Audio('beep.mp3');
+    const form = document.getElementById('todo-form');
+    const input = document.getElementById('todo-input');
+    const todoList = document.getElementById('todo-list');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    let currentFilter = 'all';
 
-    // ��������� ����� ��� ������ �����
-    let audioEnabled = false;
-    document.body.addEventListener('click', () => {
-        if (!audioEnabled) {
-            clickSound.play().then(() => clickSound.pause());
-            audioEnabled = true;
+    // Загрузка задач из localStorage
+    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+    // Рендер задач
+    function renderTodos() {
+        todoList.innerHTML = '';
+        const filteredTodos = todos.filter(todo => {
+            if (currentFilter === 'active') return !todo.completed;
+            if (currentFilter === 'completed') return todo.completed;
+            return true;
+        });
+
+        filteredTodos.forEach((todo, index) => {
+            const li = document.createElement('li');
+            li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+            li.innerHTML = `
+                <input type="checkbox" ${todo.completed ? 'checked' : ''}>
+                <span>${todo.text}</span>
+                <button class="delete-btn">Удалить</button>
+            `;
+            todoList.appendChild(li);
+
+            // Отметка выполнения
+            const checkbox = li.querySelector('input');
+            checkbox.addEventListener('change', () => toggleTodo(index));
+
+            // Удаление задачи
+            const deleteBtn = li.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', () => deleteTodo(index));
+        });
+    }
+
+    // Добавление задачи
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (input.value.trim()) {
+            todos.push({ text: input.value.trim(), completed: false });
+            input.value = '';
+            saveTodos();
+            renderTodos();
         }
-    }, { once: true });
-
-    // �������� ������
-    mainText.addEventListener('click', (e) => {
-        e.stopPropagation();
-        mainText.style.display = 'none';
-        choiceContainer.style.display = 'flex';
     });
 
-    document.getElementById('kops').addEventListener('click', (e) => {
-        e.stopPropagation();
-        clickSound.currentTime = 0;
-        clickSound.play();
+    // Переключение статуса задачи
+    function toggleTodo(index) {
+        todos[index].completed = !todos[index].completed;
+        saveTodos();
+        renderTodos();
+    }
+
+    // Удаление задачи
+    function deleteTodo(index) {
+        todos.splice(index, 1);
+        saveTodos();
+        renderTodos();
+    }
+
+    // Фильтрация задач
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.filter;
+            renderTodos();
+        });
     });
 
-    document.getElementById('ksgo').addEventListener('click', (e) => {
-        e.stopPropagation();
-        beepSound.currentTime = 0;
-        beepSound.play();
-    });
+    // Сохранение в localStorage
+    function saveTodos() {
+        localStorage.setItem('todos', JSON.stringify(todos));
+    }
 
-    document.body.addEventListener('click', (e) => {
-        if (!e.target.closest('#choice-container')) {
-            mainText.style.display = 'block';
-            choiceContainer.style.display = 'none';
-        }
-    });
+    // Первый рендер
+    renderTodos();
 });
