@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2048 + Физика</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="floor"></div>
+    
+    <div id="game-container">
+        <div class="game-header">
+            <div class="score-container">Счёт: <span id="score">0</span></div>
+            <div class="best-container">Рекорд: <span id="best">0</span></div>
+        </div>
+        <div id="grid"></div>
+    </div>
+
+    <div id="mobile-controls">
+        <button class="arrow-btn" id="arrow-up">↑</button>
+        <div>
+            <button class="arrow-btn" id="arrow-left">←</button>
+            <button class="arrow-btn" id="arrow-right">→</button>
+        </div>
+        <button class="arrow-btn" id="arrow-down">↓</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
