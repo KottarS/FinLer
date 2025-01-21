@@ -2,29 +2,172 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>To-Do List</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Космический симулятор</title>
+    <style>
+        /* Стили для всего документа */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Контейнер для звезд */
+        #starfield {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        /* Стили для отдельных звезд */
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            transition: transform 0.3s linear;
+        }
+
+        /* Сообщение о необходимости гироскопа */
+        #gyro-warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-align: center;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Список дел</h1>
-        
-        <!-- Форма для добавления задач -->
-        <form id="todo-form">
-            <input type="text" id="todo-input" placeholder="Введите задачу..." required>
-            <button type="submit">Добавить</button>
-        </form>
-
-        <!-- Фильтры -->
-        <div class="filters">
-            <button class="filter-btn active" data-filter="all">Все</button>
-            <button class="filter-btn" data-filter="active">Активные</button>
-            <button class="filter-btn" data-filter="completed">Выполненные</button>
-        </div>
-
-        <!-- Список задач -->
-        <ul id="todo-list"></ul>
+    <div id="starfield"></div>
+    <div id="gyro-warning">
+        Для работы приложения требуется гироскоп и разрешение на его использование.
+        <button onclick="requestGyro()">Разрешить доступ</button>
     </div>
-    <script src="script.js"></script>
+
+    <audio id="bg-music" loop>
+        <source src="click.mp3" type="audio/mpeg">
+        Ваш браузер не поддерживает аудио элементы.
+    </audio>
+
+    <script>
+        // Конфигурация
+        const config = {
+            starCount: 100,     // Количество звезд
+            maxStarSize: 8,     // Максимальный размер звезды (px)
+            sensitivity: 0.05,  // Чувствительность движения
+            moveThreshold: 2    // Порог срабатывания движения (градусы)
+        };
+
+        // Инициализация
+        let stars = [];
+        const starfield = document.getElementById('starfield');
+        const gyroWarning = document.getElementById('gyro-warning');
+        const audio = document.getElementById('bg-music');
+
+        // Создание звездного поля
+        function createStars() {
+            for(let i = 0; i < config.starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Рандомные параметры
+                const size = Math.random() * config.maxStarSize + 1;
+                star.style.width = star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.opacity = Math.random();
+
+                starfield.appendChild(star);
+                stars.push(star);
+            }
+        }
+
+        // Обработчик гироскопа
+        function handleOrientation(event) {
+            const {beta, gamma} = event;
+            
+            stars.forEach(star => {
+                // Рассчитываем смещение
+                const xMove = (gamma * config.sensitivity).toFixed(2);
+                const yMove = (beta * config.sensitivity).toFixed(2);
+                
+                // Применяем трансформацию
+                star.style.transform = `translate(
+                    ${xMove}px, 
+                    ${yMove}px
+                )`;
+            });
+        }
+
+        // Запрос доступа к гироскопу
+        function requestGyro() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && 
+                typeof DeviceOrientationEvent.requestPermission === 'function') {
+                
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                            gyroWarning.style.display = 'none';
+                            startAudio();
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                gyroWarning.style.display = 'none';
+                startAudio();
+            }
+        }
+
+        // Запуск музыки после пользовательского взаимодействия
+        function startAudio() {
+            const playAudio = () => {
+                audio.play()
+                    .then(() => {
+                        document.removeEventListener('click', playAudio);
+                        document.removeEventListener('touchstart', playAudio);
+                    })
+                    .catch(e => console.log('Автовоспроизведение заблокировано'));
+            };
+
+            document.addEventListener('click', playAudio);
+            document.addEventListener('touchstart', playAudio);
+        }
+
+        // Проверка поддержки гироскопа
+        function checkGyroSupport() {
+            if (!('DeviceOrientationEvent' in window)) {
+                gyroWarning.textContent = 'Ваше устройство не поддерживает гироскоп';
+                gyroWarning.style.display = 'block';
+                return false;
+            }
+            return true;
+        }
+
+        // Инициализация приложения
+        function init() {
+            if (checkGyroSupport()) {
+                gyroWarning.style.display = 'block';
+            }
+            
+            createStars();
+            startAudio();
+        }
+
+        // Запуск при загрузке
+        window.onload = init;
+    </script>
 </body>
 </html>
