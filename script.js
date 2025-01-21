@@ -1,40 +1,43 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Ð­Ð»ÐµÐ¼ÐµÐ½Ñ‚Ñ‹
     const mainText = document.getElementById('main-text');
     const choiceContainer = document.getElementById('choice-container');
-    const kops = document.getElementById('kops');
-    const ksgo = document.getElementById('ksgo');
-    const sound1 = document.getElementById('sound1');
-    const sound2 = document.getElementById('sound2');
+    
+    // Çâóêîâûå ôàéëû
+    const clickSound = new Audio('click.mp3');
+    const beepSound = new Audio('beep.mp3');
 
-    // ÐšÐ»Ð¸Ðº Ð¿Ð¾ Ð¾ÑÐ½Ð¾Ð²Ð½Ð¾Ð¹ Ð½Ð°Ð´Ð¿Ð¸ÑÐ¸
-    mainText.addEventListener('click', () => {
-        mainText.classList.remove('active');
-        mainText.classList.add('hidden');
-        choiceContainer.classList.remove('hidden');
-        choiceContainer.classList.add('active');
-    });
+    // Àêòèâàöèÿ àóäèî ïðè ïåðâîì êëèêå
+    let audioEnabled = false;
+    document.body.addEventListener('click', () => {
+        if (!audioEnabled) {
+            clickSound.play().then(() => clickSound.pause());
+            audioEnabled = true;
+        }
+    }, { once: true });
 
-    // ÐžÐ±Ñ€Ð°Ð±Ð¾Ñ‚Ñ‡Ð¸ÐºÐ¸ Ð´Ð»Ñ Ð²Ñ‹Ð±Ð¾Ñ€Ð°
-    kops.addEventListener('click', (e) => {
+    // Îñíîâíàÿ ëîãèêà
+    mainText.addEventListener('click', (e) => {
         e.stopPropagation();
-        sound1.currentTime = 0;
-        sound1.play();
+        mainText.style.display = 'none';
+        choiceContainer.style.display = 'flex';
     });
 
-    ksgo.addEventListener('click', (e) => {
+    document.getElementById('kops').addEventListener('click', (e) => {
         e.stopPropagation();
-        sound2.currentTime = 0;
-        sound2.play();
+        clickSound.currentTime = 0;
+        clickSound.play();
     });
 
-    // Ð¡Ð±Ñ€Ð¾Ñ Ð¿Ñ€Ð¸ ÐºÐ»Ð¸ÐºÐµ Ð²Ð½Ðµ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð¾Ð²
+    document.getElementById('ksgo').addEventListener('click', (e) => {
+        e.stopPropagation();
+        beepSound.currentTime = 0;
+        beepSound.play();
+    });
+
     document.body.addEventListener('click', (e) => {
-        if (!e.target.closest('.text-box')) {
-            mainText.classList.remove('hidden');
-            mainText.classList.add('active');
-            choiceContainer.classList.remove('active');
-            choiceContainer.classList.add('hidden');
+        if (!e.target.closest('#choice-container')) {
+            mainText.style.display = 'block';
+            choiceContainer.style.display = 'none';
         }
     });
 });
