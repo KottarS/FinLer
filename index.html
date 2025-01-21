@@ -2,48 +2,24 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" 
-          content="width=device-width, 
-                   initial-scale=1.0, 
-                   maximum-scale=1.0, 
-                   user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>2048 + Физика</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRITICAL OPS</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Пол -->
-    <div class="floor"></div>
+    <!-- Основная надпись -->
+    <div id="main-text" class="text-box active">КРИТИКАЛ ОПС ДИЧЬ ЕБАНАЯ</div>
     
-    <!-- Основной игровой контейнер -->
-    <div id="game-container">
-        <div class="game-header">
-            <div class="score-container">
-                Счёт: <span id="score">0</span>
-            </div>
-            <div class="best-container">
-                Рекорд: <span id="best">0</span>
-            </div>
-        </div>
-        
-        <!-- Игровое поле 4x4 -->
-        <div id="grid"></div>
+    <!-- Контейнер с выбором -->
+    <div id="choice-container" class="hidden">
+        <div id="kops" class="text-box choice">КОПС</div>
+        <div id="ksgo" class="text-box choice">КС_ГО!!!</div>
     </div>
 
-    <!-- Мобильные кнопки управления -->
-    <div id="mobile-controls">
-        <button class="arrow-btn" id="arrow-up" aria-label="Вверх">↑</button>
-        <div class="row-controls">
-            <button class="arrow-btn" id="arrow-left" aria-label="Влево">←</button>
-            <button class="arrow-btn" id="arrow-right" aria-label="Вправо">→</button>
-        </div>
-        <button class="arrow-btn" id="arrow-down" aria-label="Вниз">↓</button>
-    </div>
+    <!-- Аудио элементы -->
+    <audio id="sound1" src="https://cdn.pixabay.com/download/audio/2023/10/05/audio_3a5c1d9d5e.mp3"></audio>
+    <audio id="sound2" src="https://cdn.pixabay.com/download/audio/2023/10/05/audio_3a5c1d9d5e.mp3"></audio>
 
     <script src="script.js"></script>
-
-    <!-- PWA-манифест (опционально) -->
-    <link rel="manifest" href="/manifest.json">
 </body>
 </html>
