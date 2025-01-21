@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Космический симулятор</title>
     <style>
-        /* Стили для всего документа */
         * {
             margin: 0;
             padding: 0;
@@ -17,27 +16,26 @@
             background: #000;
             width: 100vw;
             height: 100vh;
+            touch-action: none;
         }
 
-        /* Контейнер для звезд */
         #starfield {
             position: fixed;
             width: 100%;
             height: 100%;
-            transform-style: preserve-3d;
             perspective: 1000px;
+            transform-style: preserve-3d;
         }
 
-        /* Стили для отдельных звезд */
         .star {
             position: absolute;
             background: #fff;
             border-radius: 50%;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            transition: transform 0.3s linear;
+            transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+            backface-visibility: hidden;
         }
 
-        /* Сообщение о необходимости гироскопа */
         #gyro-warning {
             position: fixed;
             top: 50%;
@@ -45,80 +43,106 @@
             transform: translate(-50%, -50%);
             color: white;
             text-align: center;
+            font-family: Arial;
             display: none;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div id="starfield"></div>
     <div id="gyro-warning">
-        Для работы приложения требуется гироскоп и разрешение на его использование.
+        Для работы включите гироскоп и разрешите доступ<br>
         <button onclick="requestGyro()">Разрешить доступ</button>
     </div>
 
     <audio id="bg-music" loop>
         <source src="click.mp3" type="audio/mpeg">
-        Ваш браузер не поддерживает аудио элементы.
     </audio>
 
     <script>
-        // Конфигурация
         const config = {
-            starCount: 100,     // Количество звезд
-            maxStarSize: 8,     // Максимальный размер звезды (px)
-            sensitivity: 0.05,  // Чувствительность движения
-            moveThreshold: 2    // Порог срабатывания движения (градусы)
+            starCount: 150,
+            maxStarSize: 10,
+            sensitivity: 0.2,
+            smoothFactor: 0.15
         };
 
-        // Инициализация
         let stars = [];
+        let currentX = 0;
+        let currentY = 0;
         const starfield = document.getElementById('starfield');
         const gyroWarning = document.getElementById('gyro-warning');
         const audio = document.getElementById('bg-music');
 
-        // Создание звездного поля
         function createStars() {
             for(let i = 0; i < config.starCount; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
                 
-                // Рандомные параметры
-                const size = Math.random() * config.maxStarSize + 1;
+                const size = Math.random() * config.maxStarSize + 2;
+                const opacity = Math.random() * 0.7 + 0.3;
+                
                 star.style.width = star.style.height = `${size}px`;
                 star.style.left = `${Math.random() * 100}%`;
                 star.style.top = `${Math.random() * 100}%`;
-                star.style.opacity = Math.random();
+                star.style.opacity = opacity;
+                star.style.filter = `blur(${size/4}px)`;
 
                 starfield.appendChild(star);
-                stars.push(star);
+                stars.push({
+                    element: star,
+                    baseX: Math.random() * 100,
+                    baseY: Math.random() * 100,
+                    depth: Math.random() * 2 + 1
+                });
             }
         }
 
-        // Обработчик гироскопа
-        function handleOrientation(event) {
-            const {beta, gamma} = event;
+        function smoothUpdate(targetX, targetY) {
+            currentX += (targetX - currentX) * config.smoothFactor;
+            currentY += (targetY - currentY) * config.smoothFactor;
             
             stars.forEach(star => {
-                // Рассчитываем смещение
-                const xMove = (gamma * config.sensitivity).toFixed(2);
-                const yMove = (beta * config.sensitivity).toFixed(2);
+                const xOffset = (currentX * config.sensitivity * star.depth).toFixed(2);
+                const yOffset = (currentY * config.sensitivity * star.depth).toFixed(2);
                 
-                // Применяем трансформацию
-                star.style.transform = `translate(
-                    ${xMove}px, 
-                    ${yMove}px
-                )`;
+                star.element.style.transform = `
+                    translate(
+                        $${xOffset}px,
+                        $${yOffset}px
+                    )
+                `;
             });
+            
+            requestAnimationFrame(() => smoothUpdate(targetX, targetY));
         }
 
-        // Запрос доступа к гироскопу
+        function handleOrientation(e) {
+            const gamma = Math.min(Math.max(e.gamma, -45), 45);
+            const beta = Math.min(Math.max(e.beta - 90, -45), 45);
+            smoothUpdate(gamma, beta);
+        }
+
         function requestGyro() {
             if (typeof DeviceOrientationEvent !== 'undefined' && 
                 typeof DeviceOrientationEvent.requestPermission === 'function') {
                 
                 DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
+                    .then(permission => {
+                        if (permission === 'granted') {
                             window.addEventListener('deviceorientation', handleOrientation);
                             gyroWarning.style.display = 'none';
                             startAudio();
@@ -126,47 +150,38 @@
                     })
                     .catch(console.error);
             } else {
+                window.addEventListener('deviceorientation', handleOrientation);
                 gyroWarning.style.display = 'none';
                 startAudio();
             }
         }
 
-        // Запуск музыки после пользовательского взаимодействия
         function startAudio() {
-            const playAudio = () => {
+            const tryPlay = () => {
                 audio.play()
                     .then(() => {
-                        document.removeEventListener('click', playAudio);
-                        document.removeEventListener('touchstart', playAudio);
+                        document.removeEventListener('click', tryPlay);
+                        document.removeEventListener('touchstart', tryPlay);
                     })
-                    .catch(e => console.log('Автовоспроизведение заблокировано'));
+                    .catch(e => console.log('Нажмите на экран для запуска музыки'));
             };
-
-            document.addEventListener('click', playAudio);
-            document.addEventListener('touchstart', playAudio);
+            
+            document.addEventListener('click', tryPlay);
+            document.addEventListener('touchstart', tryPlay);
         }
 
-        // Проверка поддержки гироскопа
-        function checkGyroSupport() {
-            if (!('DeviceOrientationEvent' in window)) {
-                gyroWarning.textContent = 'Ваше устройство не поддерживает гироскоп';
-                gyroWarning.style.display = 'block';
-                return false;
-            }
-            return true;
-        }
-
-        // Инициализация приложения
         function init() {
-            if (checkGyroSupport()) {
+            if (!('DeviceOrientationEvent' in window)) {
+                gyroWarning.textContent = 'Гироскоп не поддерживается вашим устройством';
                 gyroWarning.style.display = 'block';
+                return;
             }
             
+            gyroWarning.style.display = 'block';
             createStars();
             startAudio();
         }
 
-        // Запуск при загрузке
         window.onload = init;
     </script>
 </body>
