@@ -194,7 +194,7 @@ class Game2048 {
         if (JSON.stringify(this.cells) !== prevState) {
             this.addNewTile();
             this.updateScore();
-            if (this.isGameOver()) alert('Игра окончена! Счёт: ' + this.score);
+            if (this.isGameOver()) alert('РРіСЂР° РѕРєРѕРЅС‡РµРЅР°! РЎС‡С‘С‚: ' + this.score);
         }
     }
 
@@ -355,12 +355,13 @@ class Game2048 {
     setupSwipeControls() {
         let touchStartX = 0;
         let touchStartY = 0;
-        const minSwipeDistance = 30;
+        const minSwipeDistance = 50;
 
         document.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
-        });
+            e.preventDefault();
+        }, { passive: false });
 
         document.addEventListener('touchend', (e) => {
             const touchEndX = e.changedTouches[0].clientX;
@@ -373,20 +374,19 @@ class Game2048 {
 
             if (Math.max(absDx, absDy) < minSwipeDistance) return;
 
-            if (absDx > absDy) {
+            if (absDx > absDy * 1.2) {
                 this.move(dx > 0 ? 'ArrowRight' : 'ArrowLeft');
-            } else {
+            } else if (absDy > absDx * 1.2) {
                 this.move(dy > 0 ? 'ArrowDown' : 'ArrowUp');
             }
-        });
+            e.preventDefault();
+        }, { passive: false });
     }
 }
 
-// Инициализация системы
 const physics = new PhysicsEngine();
 const game2048 = new Game2048();
 
-// Обработка мыши для шаров
 document.addEventListener('mousedown', (e) => {
     const circle = physics.addCircle(e.clientX, e.clientY, Math.random()*50 + 30);
     
@@ -419,7 +419,6 @@ document.addEventListener('mousedown', (e) => {
     document.addEventListener('wheel', wheelListener);
 });
 
-// Игровой цикл
 function gameLoop() {
     physics.update();
     requestAnimationFrame(gameLoop);
