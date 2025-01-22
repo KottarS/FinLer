@@ -1,61 +1,126 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const backgrounds = ['bg1.jpg', 'bg2.jpg']; // Добавьте свои изображения
-    let currentBgIndex = 0;
-    let currentNumber = 1;
-    const grid = document.getElementById('gameGrid');
-    const winPopup = document.getElementById('winPopup');
-    const bgMusic = document.getElementById('backgroundMusic');
-    const winSound = document.getElementById('winMusic');
+const words = [
+    {fin: 'talo', rus: 'дом'},
+    {fin: 'koti', rus: 'дом'},
+    {fin: 'ihminen', rus: 'человек'},
+    // ... Все остальные слова из предыдущего варианта
+];
 
-    // Генерация игрового поля
-    function generateGrid() {
-        const numbers = Array.from({length: 24}, (_, i) => i + 1);
-        numbers.sort(() => Math.random() - 0.5);
+class Game {
+    constructor() {
+        this.score = 0;
+        this.currentWord = null;
+        this.musicPlayer = document.getElementById('musicPlayer');
+        this.wordCard = document.getElementById('wordCard');
+        this.answerInput = document.getElementById('answerInput');
+        this.scoreBox = document.getElementById('scoreBox');
         
-        grid.innerHTML = '';
-        numbers.forEach(num => {
-            const div = document.createElement('div');
-            div.className = 'grid-item';
-            div.textContent = num;
-            div.addEventListener('click', () => checkNumber(num, div));
-            grid.appendChild(div);
-        });
+        this.init();
     }
 
-    // Проверка клика
-    function checkNumber(num, element) {
-        if (num === currentNumber) {
-            element.classList.add('hidden');
-            currentNumber++;
-            if (currentNumber > 24) {
-                winPopup.style.display = 'flex';
-                bgMusic.pause();
-                winSound.play();
-            }
-        } else {
-            alert('Ошибка! Нажимай по порядку!');
+    init() {
+        this.createParticles();
+        this.setupEventListeners();
+        this.musicPlayer.volume = 0.3;
+        this.newWord();
+        this.answerInput.focus();
+    }
+
+    createParticles() {
+        const container = document.querySelector('.decorative-elements');
+        for(let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.cssText = `
+                width: ${Math.random() * 20 + 5}px;
+                height: ${Math.random() * 20 + 5}px;
+                left: ${Math.random() * 100}%;
+                animation-delay: ${Math.random() * 20}s;
+            `;
+            container.appendChild(particle);
         }
     }
 
-    // Смена фона
-    document.getElementById('changeBg').addEventListener('click', () => {
-        currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
-        document.body.style.backgroundImage = `url('${backgrounds[currentBgIndex]}')`;
-    });
+    getRandomWord() {
+        const randomWord = words[Math.floor(Math.random() * words.length)];
+        const isFinnish = Math.random() > 0.5;
+        
+        return {
+            word: isFinnish ? randomWord.fin : randomWord.rus,
+            answer: isFinnish ? randomWord.rus : randomWord.fin,
+            direction: isFinnish ? 'fin' : 'rus'
+        };
+    }
 
-    // Рестарт игры
-    document.getElementById('restart').addEventListener('click', () => {
-        winPopup.style.display = 'none';
-        currentNumber = 1;
-        generateGrid();
-        bgMusic.play();
-    });
+    animateCard(success) {
+        this.wordCard.style.transform = success 
+            ? 'rotateY(360deg) scale(1.05)' 
+            : 'rotateX(15deg) translateY(20px)';
+        
+        this.wordCard.style.backgroundColor = success 
+            ? 'rgba(46, 204, 113, 0.1)' 
+            : 'rgba(231, 76, 60, 0.1)';
+        
+        setTimeout(() => {
+            this.wordCard.style.transform = 'none';
+            this.wordCard.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+        }, 500);
+    }
 
-    // Автовоспроизведение музыки
-    bgMusic.play().catch(() => {
-        // Если браузер блокирует автовоспроизведение
-        document.addEventListener('click', () => bgMusic.play(), {once: true});
-    });
+    showFeedback(success) {
+        const messages = success ? [
+            '🔥 Идеально!',
+            '🚀 Космический результат!',
+            '🎯 В точку!',
+            '💎 Бриллиантовый ответ!'
+        ] : [
+            '💥 Эпик фейл!',
+            '🤯 Мозг взорвался?',
+            '🌀 Попробуй ещё!',
+            '❌ Неа, думай лучше!'
+        ];
+        
+        const message = messages[Math.floor(Math.random() * messages.length)];
+        this.wordCard.textContent = message;
+        
+        setTimeout(() => {
+            this.wordCard.textContent = this.currentWord.word.toUpperCase();
+        }, 1000);
+    }
 
-    generateGrid();
-});
+    checkAnswer() {
+        const userAnswer = this.answerInput.value.trim().toLowerCase();
+        const isCorrect = userAnswer === this.currentWord.answer.toLowerCase();
+
+        if(isCorrect) {
+            this.score++;
+            this.scoreBox.textContent = `Счёт: ${this.score}`;
+            this.animateCard(true);
+            this.showFeedback(true);
+        } else {
+            this.animateCard(false);
+            this.showFeedback(false);
+        }
+
+        this.answerInput.value = '';
+        setTimeout(() => this.newWord(), isCorrect ? 800 : 1200);
+    }
+
+    newWord() {
+        this.currentWord = this.getRandomWord();
+        this.wordCard.textContent = this.currentWord.word.toUpperCase();
+        this.answerInput.focus();
+    }
+
+    setupEventListeners() {
+        this.answerInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') this.checkAnswer();
+        });
+        
+        this.wordCard.addEventListener('click', () => {
+            this.answerInput.focus();
+        });
+    }
+}
+
+// Запуск игры
+window.addEventListener('DOMContentLoaded', () => new Game());
