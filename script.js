@@ -1,82 +1,61 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('todo-form');
-    const input = document.getElementById('todo-input');
-    const todoList = document.getElementById('todo-list');
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    let currentFilter = 'all';
+    const backgrounds = ['bg1.jpg', 'bg2.jpg']; // Добавьте свои изображения
+    let currentBgIndex = 0;
+    let currentNumber = 1;
+    const grid = document.getElementById('gameGrid');
+    const winPopup = document.getElementById('winPopup');
+    const bgMusic = document.getElementById('backgroundMusic');
+    const winSound = document.getElementById('winMusic');
 
-    // Загрузка задач из localStorage
-    let todos = JSON.parse(localStorage.getItem('todos')) || [];
-
-    // Рендер задач
-    function renderTodos() {
-        todoList.innerHTML = '';
-        const filteredTodos = todos.filter(todo => {
-            if (currentFilter === 'active') return !todo.completed;
-            if (currentFilter === 'completed') return todo.completed;
-            return true;
-        });
-
-        filteredTodos.forEach((todo, index) => {
-            const li = document.createElement('li');
-            li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
-            li.innerHTML = `
-                <input type="checkbox" ${todo.completed ? 'checked' : ''}>
-                <span>${todo.text}</span>
-                <button class="delete-btn">Удалить</button>
-            `;
-            todoList.appendChild(li);
-
-            // Отметка выполнения
-            const checkbox = li.querySelector('input');
-            checkbox.addEventListener('change', () => toggleTodo(index));
-
-            // Удаление задачи
-            const deleteBtn = li.querySelector('.delete-btn');
-            deleteBtn.addEventListener('click', () => deleteTodo(index));
+    // Генерация игрового поля
+    function generateGrid() {
+        const numbers = Array.from({length: 24}, (_, i) => i + 1);
+        numbers.sort(() => Math.random() - 0.5);
+        
+        grid.innerHTML = '';
+        numbers.forEach(num => {
+            const div = document.createElement('div');
+            div.className = 'grid-item';
+            div.textContent = num;
+            div.addEventListener('click', () => checkNumber(num, div));
+            grid.appendChild(div);
         });
     }
 
-    // Добавление задачи
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (input.value.trim()) {
-            todos.push({ text: input.value.trim(), completed: false });
-            input.value = '';
-            saveTodos();
-            renderTodos();
+    // Проверка клика
+    function checkNumber(num, element) {
+        if (num === currentNumber) {
+            element.classList.add('hidden');
+            currentNumber++;
+            if (currentNumber > 24) {
+                winPopup.style.display = 'flex';
+                bgMusic.pause();
+                winSound.play();
+            }
+        } else {
+            alert('Ошибка! Нажимай по порядку!');
         }
+    }
+
+    // Смена фона
+    document.getElementById('changeBg').addEventListener('click', () => {
+        currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
+        document.body.style.backgroundImage = `url('${backgrounds[currentBgIndex]}')`;
     });
 
-    // Переключение статуса задачи
-    function toggleTodo(index) {
-        todos[index].completed = !todos[index].completed;
-        saveTodos();
-        renderTodos();
-    }
-
-    // Удаление задачи
-    function deleteTodo(index) {
-        todos.splice(index, 1);
-        saveTodos();
-        renderTodos();
-    }
-
-    // Фильтрация задач
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentFilter = btn.dataset.filter;
-            renderTodos();
-        });
+    // Рестарт игры
+    document.getElementById('restart').addEventListener('click', () => {
+        winPopup.style.display = 'none';
+        currentNumber = 1;
+        generateGrid();
+        bgMusic.play();
     });
 
-    // Сохранение в localStorage
-    function saveTodos() {
-        localStorage.setItem('todos', JSON.stringify(todos));
-    }
+    // Автовоспроизведение музыки
+    bgMusic.play().catch(() => {
+        // Если браузер блокирует автовоспроизведение
+        document.addEventListener('click', () => bgMusic.play(), {once: true});
+    });
 
-    // Первый рендер
-    renderTodos();
+    generateGrid();
 });
