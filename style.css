@@ -1,3 +1,11 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #2ecc71;
+    --error-color: #e74c3c;
+    --background-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -5,86 +13,133 @@
 }
 
 body {
-    background-image: url('default-bg.jpg');
-    background-size: cover;
-    background-position: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
-    font-family: Arial, sans-serif;
+    background: url('Dola.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    overflow-x: hidden;
 }
 
-#changeBg {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.8);
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    z-index: 1000;
-}
-
-#gameGrid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 10px;
-    padding: 80px 20px 20px;
+.container {
     max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    min-height: 100vh;
+}
+
+.header {
+    text-align: center;
+    padding: 2rem 0;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    margin-bottom: 3rem;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.game-container {
+    position: relative;
+    perspective: 1000px;
+}
+
+.word-card {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--primary-color);
+    padding: 3rem;
+    border-radius: 20px;
+    margin: 2rem auto;
+    width: 90%;
+    font-size: 2.5rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transform-style: preserve-3d;
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    cursor: pointer;
+}
+
+.input-container {
+    position: relative;
+    width: 80%;
     margin: 0 auto;
 }
 
-.grid-item {
-    background: rgba(255, 255, 255, 0.3);
-    border: 2px solid white;
-    aspect-ratio: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 24px;
-    cursor: pointer;
-    transition: 0.3s;
+input {
+    width: 100%;
+    padding: 1.2rem;
+    font-size: 1.5rem;
+    border: none;
+    border-radius: 50px;
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
 }
 
-.grid-item:hover {
-    background: rgba(255, 255, 255, 0.5);
+input:focus {
+    outline: none;
+    box-shadow: 0 0 15px var(--secondary-color);
+    transform: scale(1.02);
 }
 
-.grid-item.hidden {
-    opacity: 0;
-    pointer-events: none;
+.score-box {
+    position: absolute;
+    right: -50px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--secondary-color);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
-.popup {
-    display: none;
+.decorative-elements {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    justify-content: center;
-    align-items: center;
+    pointer-events: none;
+    z-index: -1;
 }
 
-.popup-content {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
+.particle {
+    position: absolute;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    animation: float 20s infinite linear;
 }
 
-#restart {
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+@keyframes float {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-100vh) rotate(360deg); }
 }
 
-@media (max-width: 600px) {
-    .grid-item {
-        font-size: 18px;
+#musicPlayer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 30px;
+    padding: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .word-card {
+        font-size: 1.8rem;
+        padding: 2rem;
+    }
+    
+    input {
+        font-size: 1.2rem;
     }
 }
