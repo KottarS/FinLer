@@ -2,40 +2,39 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finnish Master | Тренажёр перевода</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Finnish Master 600</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <audio id="music" loop>
+        <source src="Domus.mp3" type="audio/mpeg">
+    </audio>
+    
     <div class="container">
-        <div class="header">
-            <h1>🇫🇮 Finnish Master 3000 🇷🇺</h1>
-            <audio id="musicPlayer" controls>
-                <source src="Domus.mp3" type="audio/mpeg">
-            </audio>
-        </div>
+        <header class="header">
+            <div class="title-box">
+                <h1>🇫🇮 Финский 600 🇷🇺</h1>
+                <div class="score" id="score">0</div>
+            </div>
+        </header>
 
-        <div class="game-container">
+        <main class="main-content">
             <div class="word-card" id="wordCard">
-                <span id="currentWord"></span>
+                <div class="word" id="currentWord"></div>
             </div>
             
-            <div class="input-container">
+            <div class="input-box">
                 <input type="text" id="answerInput" 
                        placeholder="Введите перевод..." 
-                       autocomplete="off"
-                       aria-label="Поле для перевода">
-                <div class="score-box" id="scoreBox">Счёт: 0</div>
+                       autocapitalize="off"
+                       spellcheck="false"
+                       autocomplete="off">
             </div>
-        </div>
+        </main>
     </div>
 
-    <div class="decorative-elements">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
-
-    <script src="script.js"></script>
+    <script src="words.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
