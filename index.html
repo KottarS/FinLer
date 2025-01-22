@@ -2,144 +2,24 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Космический ловец</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon-192.png">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            touch-action: manipulation;
-        }
-
-        body {
-            background: url('IMG_7206.png') no-repeat center center fixed;
-            background-size: cover;
-            color: #fff;
-            font-family: 'Arial', sans-serif;
-            overflow: hidden;
-            height: 100vh;
-            position: relative;
-        }
-
-        #game-area {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        .star {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FFD700"><path d="M12 0l3.09 6.26L22 7.27l-5 4.87 1.18 6.88L12 16l-6.18 3.02L7 12.14 2 7.27l6.91-1.01L12 0z"/></svg>');
-            background-size: cover;
-            cursor: pointer;
-            transition: transform 0.3s;
-            z-index: 2;
-        }
-
-        #hud {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            font-size: 24px;
-            z-index: 100;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        #timer {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            font-size: 24px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        #menu {
-            /* ... (остальные стили из предыдущего кода) */
-            background: rgba(0,0,0,0.7);
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Цифровая Игра</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <audio id="bg-music" loop>
-        <source src="lovvchik.mp3" type="audio/mpeg">
-        Ваш браузер не поддерживает аудио элементы.
-    </audio>
+    <button id="changeBg">Сменить фон</button>
+    <div id="gameGrid"></div>
 
-    <div id="hud">Очки: <span id="score">0</span></div>
-    <div id="timer">Время: <span id="time">30</span></div>
-    <div id="game-area"></div>
-    
-    <div id="menu">
-        <h1>Космический ловец 🌟</h1>
-        <p>Лучший счет: <span id="best-score">0</span></p>
-        <button onclick="startGame()">Старт!</button>
-        <button onclick="toggleMusic()">Музыка: Вкл</button>
+    <div id="winPopup" class="popup">
+        <div class="popup-content">
+            <p>Ты молодец! Красавец, сделал это!</p>
+            <button id="restart">Играть снова</button>
+        </div>
     </div>
 
-    <script>
-        const config = { 
-            gameDuration: 30,
-            starInterval: 1000,
-            starLife: 1500
-        };
+    <audio id="backgroundMusic" src="chetotam.mp3" loop></audio>
+    <audio id="winMusic" src="goog.mp3"></audio>
 
-        let score = 0;
-        let timeLeft = 0;
-        let gameActive = false;
-        let bestScore = localStorage.getItem('bestScore') || 0;
-        let musicEnabled = true;
-        const audio = document.getElementById('bg-music');
-
-        function toggleMusic() {
-            musicEnabled = !musicEnabled;
-            audio[musicEnabled ? 'play' : 'pause']();
-            document.querySelector('#menu button:nth-child(3)').textContent = 
-                `Музыка: ${musicEnabled ? 'Вкл' : 'Выкл'}`;
-        }
-
-        function startGame() {
-            if (gameActive) return;
-            
-            if (musicEnabled && audio.paused) {
-                audio.play().catch(() => {
-                    musicEnabled = false;
-                    alert('Нажмите на экран для запуска музыки!');
-                });
-            }
-
-            score = 0;
-            timeLeft = config.gameDuration;
-            gameActive = true;
-            gameArea.innerHTML = '';
-            document.getElementById('menu').style.display = 'none';
-            
-            gameTimer();
-            const starInterval = setInterval(createStar, config.starInterval);
-            
-            setTimeout(() => {
-                clearInterval(starInterval);
-                gameActive = false;
-            }, config.gameDuration * 1000);
-        }
-
-        // ... (остальные функции из предыдущего кода)
-
-        // Инициализация PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-
-        // Запуск музыки после первого клика
-        document.body.addEventListener('click', () => {
-            if (musicEnabled && audio.paused) {
-                audio.play();
-            }
-        }, { once: true });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
