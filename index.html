@@ -1,25 +1,118 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Цифровая Игра</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Финско-русский словарь</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: url('Dola.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+        }
+
+        .word-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px;
+            width: 400px;
+            text-align: center;
+            font-size: 24px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        .answer-box {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px;
+            width: 350px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        #music {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
 </head>
 <body>
-    <button id="changeBg">Сменить фон</button>
-    <div id="gameGrid"></div>
+    <audio id="music" controls autoplay loop>
+        <source src="Domus.mp3" type="audio/mpeg">
+    </audio>
 
-    <div id="winPopup" class="popup">
-        <div class="popup-content">
-            <p>Ты молодец! Красавец, сделал это!</p>
-            <button id="restart">Играть снова</button>
-        </div>
+    <div class="word-box" id="wordDisplay"></div>
+    <div class="answer-box">
+        <input type="text" id="answerInput" placeholder="Введите перевод..." autocomplete="off">
     </div>
 
-    <audio id="backgroundMusic" src="chetotam.mp3" loop></audio>
-    <audio id="winMusic" src="goog.mp3"></audio>
+    <script>
+        const words = [
+            {fin: 'talo', rus: 'дом'},
+            {fin: 'koti', rus: 'дом'},
+            {fin: 'ihminen', rus: 'человек'},
+            // ... Добавьте остальные 97 слов в таком же формате
+        ];
 
-    <script src="script.js"></script>
+        let currentWord = null;
+
+        function getRandomWord() {
+            const randomIndex = Math.floor(Math.random() * words.length);
+            const randomWord = words[randomIndex];
+            
+            // Случайно выбираем направление перевода (50/50)
+            return Math.random() > 0.5 
+                ? {word: randomWord.fin, answer: randomWord.rus, direction: 'fin'}
+                : {word: randomWord.rus, answer: randomWord.fin, direction: 'rus'};
+        }
+
+        function checkAnswer() {
+            const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
+            const correctAnswer = currentWord.answer.toLowerCase();
+
+            if(userAnswer === correctAnswer) {
+                alert('Ты умничка! 🩷🩷🩷');
+                setTimeout(newWord, 300);
+            } else {
+                const messages = [
+                    'Попробуй ещё раз! 💪',
+                    'Не сдавайся! 😊',
+                    'Близко! Попробуй ещё! 🌟',
+                    'Подумай внимательнее! 🧠'
+                ];
+                alert(messages[Math.floor(Math.random() * messages.length)]);
+            }
+        }
+
+        function newWord() {
+            currentWord = getRandomWord();
+            document.getElementById('wordDisplay').textContent = currentWord.word;
+            document.getElementById('answerInput').value = '';
+        }
+
+        // Обработчик ввода
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') checkAnswer();
+        });
+
+        // Начало игры
+        newWord();
+    </script>
 </body>
 </html>
