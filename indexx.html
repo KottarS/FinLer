@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Космический симулятор</title>
+    <style>
+        :root {
+            --space-dark: #0B0D20;
+            --accent: #00FF88;
+            --error: #FF4655;
+            --fuel: #FFA500;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            touch-action: manipulation;
+        }
+
+        body {
+            background: var(--space-dark);
+            color: white;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Контейнеры экранов */
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            transition: transform 0.5s;
+        }
+
+        /* Экран выбора планеты */
+        .planet-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 90%);
+            gap: 20px;
+            overflow-x: scroll;
+            scroll-snap-type: x mandatory;
+        }
+
+        .planet-card {
+            background: linear-gradient(45deg, #1A1C32, #2A2D4A);
+            border-radius: 20px;
+            padding: 20px;
+            scroll-snap-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .planet-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background: #3A3D5A;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Экран конструктора */
+        .rocket-builder {
+            display: none;
+            grid-template-columns: 1fr 3fr;
+            gap: 10px;
+        }
+
+        .parts-list {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px;
+        }
+
+        .part-item {
+            background: #2A2D4A;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .build-area {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            position: relative;
+            min-height: 300px;
+        }
+
+        /* Экран полёта */
+        .simulation-screen {
+            display: none;
+        }
+
+        .rocket {
+            width: 40px;
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: bottom 0.1s linear;
+        }
+
+        /* Панель управления */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 0 15px;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            color: var(--space-dark);
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0,255,136,0.3);
+        }
+
+        /* Информационные панели */
+        .stats {
+            position: fixed;
+            top: 20px;
+            left: 15px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .fuel-bar {
+            width: 100%;
+            height: 5px;
+            background: #333;
+            border-radius: 3px;
+            margin-top: 10px;
+        }
+
+        .fuel-progress {
+            width: 100%;
+            height: 100%;
+            background: var(--fuel);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Экран выбора планеты -->
+    <div class="screen" id="planetScreen">
+        <div class="planet-selector">
+            <div class="planet-card">
+                <div class="planet-image" style="background: linear-gradient(45deg, #FF6B6B, #FFA07A)"></div>
+                <h3>Смерс</h3>
+                <p>Гравитация: 3.71 м/с²</p>
+                <p>Атмосфера: 0.01 бар</p>
+                <button class="control-btn" onclick="selectPlanet(3.71)">🚀</button>
+            </div>
+            <div class="planet-card">
+                <div class="planet-image" style="background: linear-gradient(45deg, #4ECDC4, #45B7AF)"></div>
+                <h3>Сменус</h3>
+                <p>Гравитация: 8.87 м/с²</p>
+                <p>Атмосфера: 93 бар</p>
+                <button class="control-btn" onclick="selectPlanet(8.87)">🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран конструктора -->
+    <div class="screen" id="builderScreen">
+        <div class="stats">
+            <div>Масса: <span id="rocketMass">0</span> кг</div>
+            <div>Тяга: <span id="rocketThrust">0</span> Н</div>
+            <div class="fuel-bar">
+                <div class="fuel-progress" id="fuelProgress"></div>
+            </div>
+        </div>
+        
+        <div class="rocket-builder">
+            <div class="parts-list">
+                <div class="part-item" onclick="addPart('engine')">🚀 Двигатель</div>
+                <div class="part-item" onclick="addPart('fuel')">⛽ Бак</div>
+                <div class="part-item" onclick="addPart('parachute')">🪂 Парашют</div>
+            </div>
+            <div class="build-area" id="buildArea"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" onclick="launch()">▶️</button>
+            <button class="control-btn" onclick="clearRocket()">♻️</button>
+        </div>
+    </div>
+
+    <!-- Экран полёта -->
+    <div class="screen" id="simulationScreen">
+        <div class="stats">
+            <div>Высота: <span id="altitude">0</span> м</div>
+            <div>Скорость: <span id="speed">0</span> м/с</div>
+        </div>
+        
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBkPSJNNTAuMjYgMi4yM2MtLjE0IDAtLjI4LjA1LS4zOS4xNkwzNi4xNiAxNS43Yy0uMjIuMjItLjIyLjU3IDAgLjc5cy41Ny4yMi43OSAwTDQ5LjYgNS40N2w0My4yNCA0My4yNGMuMjIuMjIuMjIuNTcgMCAuNzktLjIyLjIyLS41Ny4yMi0uNzkgMEw1MC4yNiAyLjIzem0tLjAxIDk1LjU0Yy0uMTQgMC0uMjgtLjA1LS4zOS0uMTZsLTEzLjctMTMuM2MtLjIyLS4yMi0uMjItLjU3IDAtLjc5cy41Ny0uMjIuNzkgMGwxMi42NSAxMi4xNiA0My4yNC00My4yNGMuMjItLjIyLjU3LS4yMi43OSAwIC4yMi4yMi4yMi41NyAwIC43OUw1MC42NCA5Ny44Yy0uMTEuMS0uMjUuMTYtLjM5LjE2eiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==" 
+             class="rocket" 
+             id="rocket">
+        
+        <div class="controls">
+            <button class="control-btn" onpointerdown="thrust(true)" onpointerup="thrust(false)">🔥</button>
+            <button class="control-btn" onclick="rotateRocket(-15)">↩️</button>
+            <button class="control-btn" onclick="rotateRocket(15)">↪️</button>
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 'planet';
+        let gravity = 3.71;
+        let rocket = {
+            mass: 1000,
+            fuel: 5000,
+            thrust: 15000,
+            angle: 0,
+            altitude: 0,
+            velocity: 0,
+            isThrusting: false
+        };
+
+        // Переключение экранов
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            document.getElementById(screenId + 'Screen').style.display = 'block';
+            currentScreen = screenId;
+        }
+
+        // Выбор планеты
+        function selectPlanet(g) {
+            gravity = g;
+            showScreen('builder');
+            initBuilder();
+        }
+
+        // Конструктор ракеты
+        function initBuilder() {
+            document.getElementById('buildArea').innerHTML = '';
+            rocket = {
+                mass: 1000,
+                fuel: 5000,
+                thrust: 15000,
+                parts: []
+            };
+            updateStats();
+        }
+
+        function addPart(type) {
+            const part = document.createElement('div');
+            part.className = 'rocket-part';
+            part.textContent = type === 'engine' ? '🚀' : type === 'fuel' ? '⛽' : '🪂';
+            document.getElementById('buildArea').appendChild(part);
+            
+            switch(type) {
+                case 'engine': 
+                    rocket.thrust += 5000;
+                    break;
+                case 'fuel':
+                    rocket.fuel += 2000;
+                    rocket.mass += 500;
+                    break;
+                case 'parachute':
+                    rocket.mass += 200;
+                    break;
+            }
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('rocketMass').textContent = rocket.mass;
+            document.getElementById('rocketThrust').textContent = rocket.thrust;
+            document.getElementById('fuelProgress').style.width = 
+                `${(rocket.fuel / 5000) * 100}%`;
+        }
+
+        // Запуск ракеты
+        function launch() {
+            if(rocket.fuel <= 0) return alert('Нет топлива!');
+            showScreen('simulation');
+            startSimulation();
+        }
+
+        // Физика полёта
+        let gameLoop;
+        function startSimulation() {
+            rocket.altitude = 0;
+            rocket.velocity = 0;
+            rocket.angle = 0;
+            
+            gameLoop = setInterval(() => {
+                if(rocket.isThrusting && rocket.fuel > 0) {
+                    rocket.velocity += (rocket.thrust / rocket.mass) * 0.1;
+                    rocket.fuel -= 10;
+                }
+                
+                rocket.velocity -= gravity * 0.1;
+                rocket.altitude += rocket.velocity;
+                
+                if(rocket.altitude <= 0) {
+                    rocket.altitude = 0;
+                    clearInterval(gameLoop);
+                    alert(rocket.velocity < -5 ? 'Крушение! 💥' : 'Успешная посадка! 🎉');
+                }
+                
+                updateFlightUI();
+            }, 100);
+        }
+
+        function updateFlightUI() {
+            document.getElementById('altitude').textContent = Math.round(rocket.altitude);
+            document.getElementById('speed').textContent = Math.round(rocket.velocity);
+            document.getElementById('rocket').style.transform = 
+                `translateX(-50%) rotate(${rocket.angle}deg)`;
+        }
+
+        // Управление полётом
+        function thrust(start) {
+            rocket.isThrusting = start;
+        }
+
+        function rotateRocket(degrees) {
+            rocket.angle += degrees;
+            rocket.angle = Math.max(-90, Math.min(90, rocket.angle));
+            updateFlightUI();
+        }
+
+        // Инициализация
+        showScreen('planet');
+    </script>
+</body>
+</html>
