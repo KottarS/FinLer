@@ -1,274 +1,204 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Cyber Calculator</title>
+    <title>Electric Tentacles</title>
     <style>
-        :root {
-            --neon-blue: #00f3ff;
-            --cyber-purple: #bc13fe;
-            --matrix-green: #0f0;
-            --dark-bg: #0a0a0f;
-        }
-
-        * {
+        /* Основной стиль страницы */
+        body {
             margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            background: #0a0a1a;
+            color: #00f7ff;
             font-family: 'Courier New', monospace;
         }
 
-        body {
+        /* Контейнер для разделения экрана */
+        .container {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: var(--dark-bg);
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Верхняя часть - визуализация */
+        .visualization {
+            flex: 1;
             position: relative;
+            background: #000;
             overflow: hidden;
         }
 
-        .cyber-border {
-            position: relative;
-            padding: 2px;
-            background: linear-gradient(45deg, 
-                var(--neon-blue), 
-                var(--cyber-purple), 
-                var(--neon-blue));
-            border-radius: 15px;
-            box-shadow: 0 0 50px var(--cyber-purple);
-            animation: border-glow 2s infinite;
-        }
-
-        .calculator {
-            background: rgba(10, 10, 15, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 25px;
-            border-radius: 13px;
-            width: 400px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cyber-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(0, 243, 255, 0.1), 
-                transparent);
-        }
-
-        .branding {
-            color: var(--neon-blue);
-            font-size: 1.5em;
-            text-shadow: 0 0 10px var(--neon-blue);
-        }
-
-        .display {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 25px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-            text-align: right;
-            color: var(--matrix-green);
-            font-size: 2.5em;
-            border: 1px solid var(--neon-blue);
-            text-shadow: 0 0 10px var(--matrix-green);
-            min-height: 120px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .display::after {
-            content: '';
+        /* Эффект звёздного неба */
+        .stars {
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 50%;
+            width: 100%;
             height: 100%;
-            background: linear-gradient(
-                to right,
-                transparent,
-                rgba(0, 243, 255, 0.1),
-                transparent
-            );
-            animation: scanline 6s infinite;
+            background: 
+                radial-gradient(circle at 50% 50%, 
+                rgba(0, 247, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
 
-        .buttons-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
-
-        .btn {
+        /* Нижняя часть - код */
+        .code-panel {
+            background: #1a1a2a;
             padding: 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.4em;
-            cursor: pointer;
-            transition: all 0.3s;
             position: relative;
-            overflow: hidden;
-            background: rgba(50, 50, 70, 0.3);
-            color: var(--neon-blue);
+            max-height: 40vh;
+            overflow-y: auto;
         }
 
-        .btn::before {
-            content: '';
+        /* Стилизация кода */
+        pre {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .keyword { color: #ff79c6; }
+        .function { color: #50fa7b; }
+        .param { color: #8be9fd; }
+
+        /* Элементы интерфейса */
+        .window-controls {
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(0, 243, 255, 0.2),
-                transparent
-            );
-            transition: 0.5s;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
         }
 
-        .btn:hover::before {
-            left: 100%;
+        .control-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
         }
 
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .operator {
-            background: rgba(188, 19, 254, 0.2);
-            color: var(--cyber-purple);
-        }
-
-        .equals {
-            background: rgba(0, 243, 255, 0.2);
-            grid-column: span 2;
-        }
-
-        .special {
-            color: var(--matrix-green);
-        }
-
-        @keyframes scanline {
-            0% { left: -100%; }
-            100% { left: 200%; }
-        }
-
-        @keyframes border-glow {
-            0%, 100% { box-shadow: 0 0 50px var(--cyber-purple); }
-            50% { box-shadow: 0 0 70px var(--neon-blue); }
-        }
-
-        .hud {
+        /* Анимация щупальца */
+        canvas {
             position: absolute;
-            pointer-events: none;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 243, 255, 0.05) 0px,
-                rgba(0, 243, 255, 0.05) 1px,
-                transparent 1px,
-                transparent 5px
-            );
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
 <body>
-    <div class="cyber-border">
-        <div class="calculator">
-            <div class="hud"></div>
-            <div class="cyber-header">
-                <div class="branding">CYBER//CALC v2.3.5</div>
-                <div class="status-led"></div>
+    <div class="container">
+        <!-- Верхняя часть: визуализация -->
+        <div class="visualization">
+            <div class="stars"></div>
+            <canvas id="tentacleCanvas"></canvas>
+            <h1 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%);">
+                Electric Tentacles
+            </h1>
+        </div>
+
+        <!-- Нижняя часть: код -->
+        <div class="code-panel">
+            <div class="window-controls">
+                <div class="control-dot" style="background: #ff5f56"></div>
+                <div class="control-dot" style="background: #ffbd2e"></div>
+                <div class="control-dot" style="background: #27c93f"></div>
             </div>
-            <div class="display">0</div>
-            <div class="buttons-grid">
-                <button class="btn special" onclick="clearDisplay()">AC</button>
-                <button class="btn special" onclick="appendToDisplay('(')">(</button>
-                <button class="btn special" onclick="appendToDisplay(')')">)</button>
-                <button class="btn operator" onclick="appendToDisplay('/')">÷</button>
+            <pre><code>
+<span class="keyword">class</span> <span class="function">Tentacle</span> {
+    <span class="keyword">constructor</span>(<span class="param">x</span>, <span class="param">y</span>, <span class="param">l</span>, <span class="param">n</span>, <span class="param">a</span>) {
+        <span class="keyword">this</span>.pos = { <span class="param">x</span>, <span class="param">y</span> };
+        <span class="keyword">this</span>.length = <span class="param">l</span>;
+        <span class="keyword">this</span>.segments = <span class="param">n</span>;
+        <span class="keyword">this</span>.angle = <span class="param">a</span>;
+        <span class="keyword">this</span>.branches = [];
+        
+        // Генерация сегментов
+        <span class="keyword">for</span> (let i = 0; i < <span class="param">n</span>; i++) {
+            <span class="keyword">this</span>.branches.push({
+                x: <span class="param">x</span> + Math.cos(<span class="param">a</span>) * <span class="param">l</span> * i,
+                y: <span class="param">y</span> + Math.sin(<span class="param">a</span>) * <span class="param">l</span> * i,
+                width: <span class="param">l</span> * (1 - i/<span class="param">n</span>)
+            });
+        }
+    }
 
-                <button class="btn" onclick="appendToDisplay('7')">7</button>
-                <button class="btn" onclick="appendToDisplay('8')">8</button>
-                <button class="btn" onclick="appendToDisplay('9')">9</button>
-                <button class="btn operator" onclick="appendToDisplay('*')">×</button>
-
-                <button class="btn" onclick="appendToDisplay('4')">4</button>
-                <button class="btn" onclick="appendToDisplay('5')">5</button>
-                <button class="btn" onclick="appendToDisplay('6')">6</button>
-                <button class="btn operator" onclick="appendToDisplay('-')">−</button>
-
-                <button class="btn" onclick="appendToDisplay('1')">1</button>
-                <button class="btn" onclick="appendToDisplay('2')">2</button>
-                <button class="btn" onclick="appendToDisplay('3')">3</button>
-                <button class="btn operator" onclick="appendToDisplay('+')">+</button>
-
-                <button class="btn" onclick="appendToDisplay('0')">0</button>
-                <button class="btn" onclick="appendToDisplay('.')">.</button>
-                <button class="btn special" onclick="deleteLastChar()">DEL</button>
-                <button class="btn equals" onclick="calculate()">=</button>
+    <span class="function">update</span>() {
+        // Анимация щупальца...
+    }
+}
+            </code></pre>
+            <div style="position: absolute; bottom: 10px; right: 10px;">
+                <span style="color: #666">@harvey.dev</span>
             </div>
         </div>
     </div>
 
     <script>
-        const display = document.querySelector('.display');
-        let isNewCalculation = true;
+        // Инициализация Canvas
+        const canvas = document.getElementById('tentacleCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight / 2;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
-        function appendToDisplay(value) {
-            if (isNewCalculation) {
-                display.textContent = value;
-                isNewCalculation = false;
-            } else {
-                display.textContent += value;
+        // Класс для щупальца
+        class Tentacle {
+            constructor(x, y, length, segments, angle) {
+                this.pos = { x, y };
+                this.length = length;
+                this.segments = segments;
+                this.angle = angle;
             }
-        }
 
-        function clearDisplay() {
-            display.textContent = '0';
-            isNewCalculation = true;
-        }
-
-        function deleteLastChar() {
-            display.textContent = display.textContent.slice(0, -1) || '0';
-            if (display.textContent === '0') isNewCalculation = true;
-        }
-
-        function calculate() {
-            try {
-                let expression = display.textContent
-                    .replace(/×/g, '*')
-                    .replace(/÷/g, '/')
-                    .replace(/−/g, '-');
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(this.pos.x, this.pos.y);
                 
-                const result = eval(expression);
-                display.textContent = Number.isInteger(result) ? 
-                    result : result.toFixed(4);
-                isNewCalculation = true;
-            } catch (error) {
-                display.textContent = 'SYNTAX ERROR';
-                setTimeout(clearDisplay, 1000);
+                let currentX = this.pos.x;
+                let currentY = this.pos.y;
+                const angleStep = (Math.PI/8) * Math.sin(Date.now()/500); // Анимация
+
+                for(let i = 0; i < this.segments; i++) {
+                    const branchAngle = this.angle + angleStep * i;
+                    const nextX = currentX + Math.cos(branchAngle) * this.length;
+                    const nextY = currentY + Math.sin(branchAngle) * this.length;
+                    
+                    // Градиент для "электрического" эффекта
+                    const gradient = ctx.createLinearGradient(currentX, currentY, nextX, nextY);
+                    gradient.addColorStop(0, '#00f7ff');
+                    gradient.addColorStop(1, 'rgba(0, 247, 255, 0.2)');
+                    
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 5 - (i * 4/this.segments);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(currentX, currentY);
+                    ctx.lineTo(nextX, nextY);
+                    ctx.stroke();
+                    
+                    currentX = nextX;
+                    currentY = nextY;
+                }
             }
         }
 
-        // Keyboard support
-        document.addEventListener('keydown', (e) => {
-            const key = e.key;
-            if (key >= '0' && key <= '9' || key === '.') appendToDisplay(key);
-            if (key === '+' || key === '-' || key === '*' || key === '/') appendToDisplay(key);
-            if (key === 'Enter') calculate();
-            if (key === 'Backspace') deleteLastChar();
-            if (key === 'Escape') clearDisplay();
-        });
+        // Создание и анимация
+        const tentacle = new Tentacle(
+            canvas.width/2, 
+            canvas.height/2, 
+            30, 
+            8, 
+            -Math.PI/2
+        );
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            tentacle.draw();
+            requestAnimationFrame(animate);
+        }
+        animate();
     </script>
 </body>
 </html>
