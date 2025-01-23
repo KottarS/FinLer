@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Interactive Tentacles</title>
+    <title>Cyber Tentacles</title>
     <style>
         * {
             margin: 0;
@@ -13,8 +13,8 @@
         }
 
         body {
-            background: #000;
             overflow: hidden;
+            background: #000;
         }
 
         canvas {
@@ -25,114 +25,8 @@
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Настройки
-        const config = {
-            tentacles: 3,          // Количество щупалец
-            segments: 15,          // Сегментов на щупальце
-            segmentLength: 30,     // Длина сегмента
-            smoothness: 0.2,       // Плавность движения (0-1)
-            color: '#00f7ff',      // Основной цвет
-            trailOpacity: 0.05     // Прозрачность следа
-        };
-
-        // Инициализация
-        let touchPos = { x: 0, y: 0 };
-        let tentacles = [];
-
-        class Tentacle {
-            constructor() {
-                this.segments = Array.from({ length: config.segments }, () => ({
-                    x: canvas.width/2,
-                    y: canvas.height/2,
-                    angle: Math.random() * Math.PI * 2
-                }));
-            }
-
-            update(targetX, targetY) {
-                // Обновление позиций с плавным движением
-                this.segments.forEach((seg, i) => {
-                    const prev = this.segments[i-1] || { x: targetX, y: targetY };
-                    const dx = prev.x - seg.x;
-                    const dy = prev.y - seg.y;
-                    const angle = Math.atan2(dy, dx);
-                    
-                    seg.x += dx * config.smoothness;
-                    seg.y += dy * config.smoothness;
-                    seg.angle = angle;
-                });
-            }
-
-            draw() {
-                ctx.beginPath();
-                this.segments.forEach((seg, i) => {
-                    const next = this.segments[i+1] || seg;
-                    const progress = i/config.segments;
-                    
-                    // Градиент для эффекта
-                    const gradient = ctx.createLinearGradient(
-                        seg.x, seg.y, 
-                        next.x, next.y
-                    );
-                    gradient.addColorStop(0, config.color);
-                    gradient.addColorStop(1, `${config.color}${Math.round(progress * 255).toString(16)}`);
-                    
-                    // Рисование линии
-                    ctx.strokeStyle = gradient;
-                    ctx.lineWidth = 10 * (1 - progress);
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(seg.x, seg.y);
-                    ctx.lineTo(next.x, next.y);
-                    ctx.stroke();
-                });
-            }
-        }
-
-        // Настройка Canvas
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resize();
-        window.addEventListener('resize', resize);
-
-        // Инициализация щупалец
-        for(let i = 0; i < config.tentacles; i++) {
-            tentacles.push(new Tentacle());
-        }
-
-        // Обработка касаний
-        canvas.addEventListener('touchstart', handleTouch);
-        canvas.addEventListener('touchmove', handleTouch);
-
-        function handleTouch(e) {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            touchPos.x = e.touches[0].clientX - rect.left;
-            touchPos.y = e.touches[0].clientY - rect.top;
-        }
-
-        // Анимация
-        function animate() {
-            // Эффект шлейфа
-            ctx.fillStyle = `rgba(0, 0, 0, ${config.trailOpacity})`;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Обновление и отрисовка щупалец
-            tentacles.forEach(t => {
-                t.update(touchPos.x, touchPos.y);
-                t.draw();
-            });
-
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+    <script type="module" src="/main.js"></script>
 </body>
 </html>
