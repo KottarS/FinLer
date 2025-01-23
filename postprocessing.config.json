@@ -1,0 +1,11 @@
+{
+    "bloom": {
+        "strength": 1.5,
+        "radius": 0.8,
+        "threshold": 0.4
+    },
+    "particles": {
+        "count": 2000,
+        "size": 0.15
+    }
+}
