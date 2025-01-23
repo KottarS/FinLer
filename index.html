@@ -2,200 +2,134 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Electric Tentacles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Interactive Tentacles</title>
     <style>
-        /* Основной стиль страницы */
-        body {
+        * {
             margin: 0;
-            background: #0a0a1a;
-            color: #00f7ff;
-            font-family: 'Courier New', monospace;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
         }
 
-        /* Контейнер для разделения экрана */
-        .container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        /* Верхняя часть - визуализация */
-        .visualization {
-            flex: 1;
-            position: relative;
+        body {
             background: #000;
             overflow: hidden;
         }
 
-        /* Эффект звёздного неба */
-        .stars {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 50% 50%, 
-                rgba(0, 247, 255, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-
-        /* Нижняя часть - код */
-        .code-panel {
-            background: #1a1a2a;
-            padding: 20px;
-            position: relative;
-            max-height: 40vh;
-            overflow-y: auto;
-        }
-
-        /* Стилизация кода */
-        pre {
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .keyword { color: #ff79c6; }
-        .function { color: #50fa7b; }
-        .param { color: #8be9fd; }
-
-        /* Элементы интерфейса */
-        .window-controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            display: flex;
-            gap: 5px;
-        }
-
-        .control-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        /* Анимация щупальца */
         canvas {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            position: fixed;
+            top: 0;
+            left: 0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Верхняя часть: визуализация -->
-        <div class="visualization">
-            <div class="stars"></div>
-            <canvas id="tentacleCanvas"></canvas>
-            <h1 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%);">
-                Electric Tentacles
-            </h1>
-        </div>
-
-        <!-- Нижняя часть: код -->
-        <div class="code-panel">
-            <div class="window-controls">
-                <div class="control-dot" style="background: #ff5f56"></div>
-                <div class="control-dot" style="background: #ffbd2e"></div>
-                <div class="control-dot" style="background: #27c93f"></div>
-            </div>
-            <pre><code>
-<span class="keyword">class</span> <span class="function">Tentacle</span> {
-    <span class="keyword">constructor</span>(<span class="param">x</span>, <span class="param">y</span>, <span class="param">l</span>, <span class="param">n</span>, <span class="param">a</span>) {
-        <span class="keyword">this</span>.pos = { <span class="param">x</span>, <span class="param">y</span> };
-        <span class="keyword">this</span>.length = <span class="param">l</span>;
-        <span class="keyword">this</span>.segments = <span class="param">n</span>;
-        <span class="keyword">this</span>.angle = <span class="param">a</span>;
-        <span class="keyword">this</span>.branches = [];
-        
-        // Генерация сегментов
-        <span class="keyword">for</span> (let i = 0; i < <span class="param">n</span>; i++) {
-            <span class="keyword">this</span>.branches.push({
-                x: <span class="param">x</span> + Math.cos(<span class="param">a</span>) * <span class="param">l</span> * i,
-                y: <span class="param">y</span> + Math.sin(<span class="param">a</span>) * <span class="param">l</span> * i,
-                width: <span class="param">l</span> * (1 - i/<span class="param">n</span>)
-            });
-        }
-    }
-
-    <span class="function">update</span>() {
-        // Анимация щупальца...
-    }
-}
-            </code></pre>
-            <div style="position: absolute; bottom: 10px; right: 10px;">
-                <span style="color: #666">@harvey.dev</span>
-            </div>
-        </div>
-    </div>
+    <canvas id="canvas"></canvas>
 
     <script>
-        // Инициализация Canvas
-        const canvas = document.getElementById('tentacleCanvas');
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight / 2;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        // Настройки
+        const config = {
+            tentacles: 3,          // Количество щупалец
+            segments: 15,          // Сегментов на щупальце
+            segmentLength: 30,     // Длина сегмента
+            smoothness: 0.2,       // Плавность движения (0-1)
+            color: '#00f7ff',      // Основной цвет
+            trailOpacity: 0.05     // Прозрачность следа
+        };
 
-        // Класс для щупальца
+        // Инициализация
+        let touchPos = { x: 0, y: 0 };
+        let tentacles = [];
+
         class Tentacle {
-            constructor(x, y, length, segments, angle) {
-                this.pos = { x, y };
-                this.length = length;
-                this.segments = segments;
-                this.angle = angle;
+            constructor() {
+                this.segments = Array.from({ length: config.segments }, () => ({
+                    x: canvas.width/2,
+                    y: canvas.height/2,
+                    angle: Math.random() * Math.PI * 2
+                }));
+            }
+
+            update(targetX, targetY) {
+                // Обновление позиций с плавным движением
+                this.segments.forEach((seg, i) => {
+                    const prev = this.segments[i-1] || { x: targetX, y: targetY };
+                    const dx = prev.x - seg.x;
+                    const dy = prev.y - seg.y;
+                    const angle = Math.atan2(dy, dx);
+                    
+                    seg.x += dx * config.smoothness;
+                    seg.y += dy * config.smoothness;
+                    seg.angle = angle;
+                });
             }
 
             draw() {
                 ctx.beginPath();
-                ctx.moveTo(this.pos.x, this.pos.y);
-                
-                let currentX = this.pos.x;
-                let currentY = this.pos.y;
-                const angleStep = (Math.PI/8) * Math.sin(Date.now()/500); // Анимация
-
-                for(let i = 0; i < this.segments; i++) {
-                    const branchAngle = this.angle + angleStep * i;
-                    const nextX = currentX + Math.cos(branchAngle) * this.length;
-                    const nextY = currentY + Math.sin(branchAngle) * this.length;
+                this.segments.forEach((seg, i) => {
+                    const next = this.segments[i+1] || seg;
+                    const progress = i/config.segments;
                     
-                    // Градиент для "электрического" эффекта
-                    const gradient = ctx.createLinearGradient(currentX, currentY, nextX, nextY);
-                    gradient.addColorStop(0, '#00f7ff');
-                    gradient.addColorStop(1, 'rgba(0, 247, 255, 0.2)');
+                    // Градиент для эффекта
+                    const gradient = ctx.createLinearGradient(
+                        seg.x, seg.y, 
+                        next.x, next.y
+                    );
+                    gradient.addColorStop(0, config.color);
+                    gradient.addColorStop(1, `${config.color}${Math.round(progress * 255).toString(16)}`);
                     
+                    // Рисование линии
                     ctx.strokeStyle = gradient;
-                    ctx.lineWidth = 5 - (i * 4/this.segments);
+                    ctx.lineWidth = 10 * (1 - progress);
                     
                     ctx.beginPath();
-                    ctx.moveTo(currentX, currentY);
-                    ctx.lineTo(nextX, nextY);
+                    ctx.moveTo(seg.x, seg.y);
+                    ctx.lineTo(next.x, next.y);
                     ctx.stroke();
-                    
-                    currentX = nextX;
-                    currentY = nextY;
-                }
+                });
             }
         }
 
-        // Создание и анимация
-        const tentacle = new Tentacle(
-            canvas.width/2, 
-            canvas.height/2, 
-            30, 
-            8, 
-            -Math.PI/2
-        );
+        // Настройка Canvas
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
 
+        // Инициализация щупалец
+        for(let i = 0; i < config.tentacles; i++) {
+            tentacles.push(new Tentacle());
+        }
+
+        // Обработка касаний
+        canvas.addEventListener('touchstart', handleTouch);
+        canvas.addEventListener('touchmove', handleTouch);
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            touchPos.x = e.touches[0].clientX - rect.left;
+            touchPos.y = e.touches[0].clientY - rect.top;
+        }
+
+        // Анимация
         function animate() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            // Эффект шлейфа
+            ctx.fillStyle = `rgba(0, 0, 0, ${config.trailOpacity})`;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            tentacle.draw();
+
+            // Обновление и отрисовка щупалец
+            tentacles.forEach(t => {
+                t.update(touchPos.x, touchPos.y);
+                t.draw();
+            });
+
             requestAnimationFrame(animate);
         }
         animate();
