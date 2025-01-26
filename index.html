@@ -4,18 +4,16 @@
     <title>Box Rain Game</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.18.0/matter.min.js"></script>
     <style>
-        /* styles.css */
         body {
             margin: 0;
             overflow: hidden;
             cursor: crosshair;
-            position: relative;
         }
         
         #game-container {
+            position: relative;
             width: 100vw;
             height: 100vh;
-            position: relative;
         }
 
         #background {
@@ -30,34 +28,32 @@
             position: absolute;
             z-index: 2;
         }
-
-        #character {
-            position: absolute;
-            z-index: 3;
-            pointer-events: none;
-        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <img id="background" src="wall1.jpg" alt="Background">
         <canvas id="game-canvas"></canvas>
-        <img id="character" src="R1.jpg" alt="Character">
     </div>
 
     <script>
-        // config.js
+        const Engine = Matter.Engine,
+            Render = Matter.Render,
+            World = Matter.World,
+            Bodies = Matter.Bodies;
+
+        // Конфигурация
         const CONFIG = {
             GAME_WIDTH: 1920,
             GAME_HEIGHT: 1080,
-            CHARACTER: {
+            PLATFORM: {
                 WIDTH: 1337,
                 HEIGHT: 216,
-                Y_POSITION: 1080 - 216 // Нижний край экрана
+                Y_POS: 1080 - 216 // Нижний край экрана
             },
             BOX: {
-                SIZE: 177,
-                SPAWN_OFFSET: -100,
+                SIZE: 117,
+                SPAWN_OFFSET: -50,
                 PHYSICS: {
                     density: 0.8,
                     friction: 0.5,
@@ -66,17 +62,11 @@
             }
         };
 
-        // main.js
-        const Engine = Matter.Engine,
-            Render = Matter.Render,
-            World = Matter.World,
-            Bodies = Matter.Bodies;
-
         // Инициализация движка
-        const engine = Matter.Engine.create();
+        const engine = Engine.create();
         
         // Настройка рендерера
-        const render = Matter.Render.create({
+        const render = Render.create({
             element: document.getElementById('game-container'),
             engine: engine,
             canvas: document.getElementById('game-canvas'),
@@ -88,56 +78,49 @@
             }
         });
 
-        // Инициализация персонажа
-        const character = Bodies.rectangle(
+        // Создание платформы (R1.jpg)
+        const platform = Bodies.rectangle(
             CONFIG.GAME_WIDTH / 2,
-            CONFIG.CHARACTER.Y_POSITION + CONFIG.CHARACTER.HEIGHT / 2,
-            CONFIG.CHARACTER.WIDTH,
-            CONFIG.CHARACTER.HEIGHT,
+            CONFIG.PLATFORM.Y_POS - CONFIG.PLATFORM.HEIGHT/2,
+            CONFIG.PLATFORM.WIDTH,
+            CONFIG.PLATFORM.HEIGHT,
             {
                 isStatic: true,
                 render: {
-                    fillStyle: 'transparent'
+                    sprite: {
+                        texture: 'R1.jpg',
+                        xScale: 1,
+                        yScale: 1
+                    }
                 }
             }
         );
 
         // Границы мира
         const boundaries = [
-            Bodies.rectangle( // Пол (персонаж)
-                CONFIG.GAME_WIDTH / 2,
-                CONFIG.GAME_HEIGHT + 50,
-                CONFIG.GAME_WIDTH,
-                100,
-                { isStatic: true, render: { visible: false } }
-            ),
-            Bodies.rectangle( // Левая стена
-                -50,
-                CONFIG.GAME_HEIGHT / 2,
-                100,
-                CONFIG.GAME_HEIGHT,
-                { isStatic: true, render: { visible: false } }
-            ),
-            Bodies.rectangle( // Правая стена
-                CONFIG.GAME_WIDTH + 50,
-                CONFIG.GAME_HEIGHT / 2,
-                100,
-                CONFIG.GAME_HEIGHT,
-                { isStatic: true, render: { visible: false } }
-            )
+            Bodies.rectangle(-50, CONFIG.GAME_HEIGHT/2, 100, CONFIG.GAME_HEIGHT, { 
+                isStatic: true, 
+                render: { visible: false } 
+            }),
+            Bodies.rectangle(CONFIG.GAME_WIDTH + 50, CONFIG.GAME_HEIGHT/2, 100, CONFIG.GAME_HEIGHT, { 
+                isStatic: true, 
+                render: { visible: false } 
+            })
         ];
 
         // Добавление объектов в мир
-        World.add(engine.world, [character, ...boundaries]);
+        World.add(engine.world, [platform, ...boundaries]);
 
         // Обработка кликов
         document.addEventListener('click', (e) => {
             const rect = render.canvas.getBoundingClientRect();
-            const scaleX = render.canvas.width / rect.width;
-            const scaleY = render.canvas.height / rect.height;
+            const scaleX = CONFIG.GAME_WIDTH / rect.width;
+            const scaleY = CONFIG.GAME_HEIGHT / rect.height;
+            
+            const mouseX = (e.clientX - rect.left) * scaleX;
             
             const box = Bodies.rectangle(
-                (e.clientX - rect.left) * scaleX,
+                mouseX,
                 CONFIG.BOX.SPAWN_OFFSET,
                 CONFIG.BOX.SIZE,
                 CONFIG.BOX.SIZE,
@@ -158,20 +141,17 @@
 
         // Запуск движка
         Engine.run(engine);
-        Matter.Render.run(render);
+        Render.run(render);
 
-        // Адаптация под размер экрана
+        // Масштабирование
         function resize() {
             const canvas = render.canvas;
-            const container = document.getElementById('game-container');
-            
             const scale = Math.min(
                 window.innerWidth / CONFIG.GAME_WIDTH,
                 window.innerHeight / CONFIG.GAME_HEIGHT
             );
             
             canvas.style.transform = `scale(${scale})`;
-            container.style.height = `${window.innerHeight}px`;
         }
 
         window.addEventListener('resize', resize);
