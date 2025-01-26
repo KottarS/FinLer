@@ -28,12 +28,19 @@
             position: absolute;
             z-index: 2;
         }
+
+        #particles-canvas {
+            position: absolute;
+            z-index: 3;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <img id="background" src="wall1.jpg" alt="Background">
         <canvas id="game-canvas"></canvas>
+        <canvas id="particles-canvas"></canvas>
     </div>
 
     <script>
@@ -41,8 +48,7 @@
             Render = Matter.Render,
             World = Matter.World,
             Bodies = Matter.Bodies,
-            Events = Matter.Events,
-            Body = Matter.Body;
+            Events = Matter.Events;
 
         const CONFIG = {
             GAME_WIDTH: 1920,
@@ -62,10 +68,11 @@
                 }
             },
             PARTICLES: {
-                COUNT: 5,
-                SIZE: 5,
+                MAX: 500, // Максимум частиц
+                SIZE: 4,
                 LIFE: 30,
-                SPEED: 0.5
+                SPEED: 3,
+                COUNT: 3 // Частиц за удар
             }
         };
 
@@ -83,50 +90,71 @@
         });
 
         // Система частиц
-        const particles = [];
+        const particlesCanvas = document.getElementById('particles-canvas');
+        const pctx = particlesCanvas.getContext('2d');
+        particlesCanvas.width = CONFIG.GAME_WIDTH;
+        particlesCanvas.height = CONFIG.GAME_HEIGHT;
         
-        function createParticles(position, color) {
-            for(let i = 0; i < CONFIG.PARTICLES.COUNT; i++) {
-                const particle = Bodies.circle(
-                    position.x,
-                    position.y,
-                    CONFIG.PARTICLES.SIZE,
-                    {
-                        render: {
-                            fillStyle: color,
-                            strokeStyle: '#fff',
-                            lineWidth: 2
-                        },
-                        frictionAir: 0.05,
-                        life: CONFIG.PARTICLES.LIFE
-                    }
-                );
-                
-                Body.setVelocity(particle, {
-                    x: (Math.random() - 0.5) * CONFIG.PARTICLES.SPEED * 10,
-                    y: (Math.random() - 0.5) * CONFIG.PARTICLES.SPEED * 10
-                });
-                
-                particles.push(particle);
-                World.add(engine.world, particle);
+        let particles = [];
+        
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * CONFIG.PARTICLES.SPEED;
+                this.vy = (Math.random() - 0.5) * CONFIG.PARTICLES.SPEED;
+                this.life = CONFIG.PARTICLES.LIFE;
+                this.color = color;
             }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.1;
+                this.life--;
+            }
+            
+            draw() {
+                pctx.fillStyle = this.color;
+                pctx.beginPath();
+                pctx.arc(this.x, this.y, CONFIG.PARTICLES.SIZE, 0, Math.PI * 2);
+                pctx.fill();
+            }
+        }
+
+        function createParticles(x, y, color) {
+            if(particles.length > CONFIG.PARTICLES.MAX) return;
+            
+            for(let i = 0; i < CONFIG.PARTICLES.COUNT; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function updateParticles() {
+            pctx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+            
+            for(let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                
+                if(particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            requestAnimationFrame(updateParticles);
         }
 
         // Обработчик столкновений
         Events.on(engine, 'collisionStart', (event) => {
             event.pairs.forEach((pair) => {
-                const bodyA = pair.bodyA;
-                const bodyB = pair.bodyB;
+                const color = pair.bodyA.label === 'platform' || 
+                            pair.bodyB.label === 'platform' ? 
+                            '#FFD700' : '#FF4500';
                 
-                // Определение цвета частиц
-                let color = '#FFD700';
-                if(bodyA.label === 'box' || bodyB.label === 'box') {
-                    color = '#FF4500';
-                }
-
-                // Создание частиц в точке столкновения
                 createParticles(
-                    pair.collision.supports[0],
+                    pair.collision.supports[0].x,
+                    pair.collision.supports[0].y,
                     color
                 );
             });
@@ -191,20 +219,10 @@
             World.add(engine.world, box);
         });
 
-        // Удаление старых частиц
-        setInterval(() => {
-            particles.forEach((particle, index) => {
-                if(particle.life <= 0) {
-                    World.remove(engine.world, particle);
-                    particles.splice(index, 1);
-                } else {
-                    particle.life--;
-                }
-            });
-        }, 1000/60);
-
+        // Запуск систем
         Engine.run(engine);
         Render.run(render);
+        updateParticles();
 
         function resize() {
             const canvas = render.canvas;
@@ -214,6 +232,7 @@
             );
             
             canvas.style.transform = `scale(${scale})`;
+            particlesCanvas.style.transform = `scale(${scale})`;
         }
 
         window.addEventListener('resize', resize);
