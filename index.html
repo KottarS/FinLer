@@ -9,13 +9,11 @@
             overflow: hidden;
             cursor: crosshair;
         }
-        
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-
         #background {
             position: absolute;
             width: 100%;
@@ -23,16 +21,9 @@
             object-fit: cover;
             z-index: 1;
         }
-
         #game-canvas {
             position: absolute;
             z-index: 2;
-        }
-
-        #particles-canvas {
-            position: absolute;
-            z-index: 3;
-            pointer-events: none;
         }
     </style>
 </head>
@@ -40,41 +31,15 @@
     <div id="game-container">
         <img id="background" src="wall1.jpg" alt="Background">
         <canvas id="game-canvas"></canvas>
-        <canvas id="particles-canvas"></canvas>
     </div>
 
     <script>
         const Engine = Matter.Engine,
-            Render = Matter.Render,
-            World = Matter.World,
-            Bodies = Matter.Bodies,
-            Events = Matter.Events;
-
-        const CONFIG = {
-            GAME_WIDTH: 1920,
-            GAME_HEIGHT: 1080,
-            PLATFORM: {
-                WIDTH: 1337,
-                HEIGHT: 216,
-                Y_POS: 1080 - 216
-            },
-            BOX: {
-                SIZE: 117,
-                SPAWN_OFFSET: -50,
-                PHYSICS: {
-                    density: 0.8,
-                    friction: 0.5,
-                    restitution: 0.3
-                }
-            },
-            PARTICLES: {
-                MAX: 500, // Максимум частиц
-                SIZE: 4,
-                LIFE: 30,
-                SPEED: 3,
-                COUNT: 3 // Частиц за удар
-            }
-        };
+              Render = Matter.Render,
+              World = Matter.World,
+              Bodies = Matter.Bodies,
+              Body = Matter.Body,
+              Events = Matter.Events;
 
         const engine = Engine.create();
         const render = Render.create({
@@ -82,93 +47,44 @@
             engine: engine,
             canvas: document.getElementById('game-canvas'),
             options: {
-                width: CONFIG.GAME_WIDTH,
-                height: CONFIG.GAME_HEIGHT,
+                width: 1920,
+                height: 1080,
                 wireframes: false,
                 background: 'transparent'
             }
         });
 
-        // Система частиц
-        const particlesCanvas = document.getElementById('particles-canvas');
-        const pctx = particlesCanvas.getContext('2d');
-        particlesCanvas.width = CONFIG.GAME_WIDTH;
-        particlesCanvas.height = CONFIG.GAME_HEIGHT;
-        
-        let particles = [];
-        
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x;
-                this.y = y;
-                this.vx = (Math.random() - 0.5) * CONFIG.PARTICLES.SPEED;
-                this.vy = (Math.random() - 0.5) * CONFIG.PARTICLES.SPEED;
-                this.life = CONFIG.PARTICLES.LIFE;
-                this.color = color;
-            }
-            
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vy += 0.1;
-                this.life--;
-            }
-            
-            draw() {
-                pctx.fillStyle = this.color;
-                pctx.beginPath();
-                pctx.arc(this.x, this.y, CONFIG.PARTICLES.SIZE, 0, Math.PI * 2);
-                pctx.fill();
-            }
-        }
-
-        function createParticles(x, y, color) {
-            if(particles.length > CONFIG.PARTICLES.MAX) return;
-            
-            for(let i = 0; i < CONFIG.PARTICLES.COUNT; i++) {
-                particles.push(new Particle(x, y, color));
-            }
-        }
-
-        function updateParticles() {
-            pctx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
-            
-            for(let i = particles.length - 1; i >= 0; i--) {
-                particles[i].update();
-                particles[i].draw();
-                
-                if(particles[i].life <= 0) {
-                    particles.splice(i, 1);
+        // Конфигурация
+        const config = {
+            platform: {
+                width: 1337,
+                height: 216,
+                y: 1080 - 216
+            },
+            box: {
+                size: 117,
+                spawnY: -50,
+                physics: {
+                    density: 0.8,
+                    restitution: 0.3
                 }
+            },
+            character: {
+                width: 75,
+                height: 103,
+                jump: -12,
+                speed: 6
             }
-            
-            requestAnimationFrame(updateParticles);
-        }
+        };
 
-        // Обработчик столкновений
-        Events.on(engine, 'collisionStart', (event) => {
-            event.pairs.forEach((pair) => {
-                const color = pair.bodyA.label === 'platform' || 
-                            pair.bodyB.label === 'platform' ? 
-                            '#FFD700' : '#FF4500';
-                
-                createParticles(
-                    pair.collision.supports[0].x,
-                    pair.collision.supports[0].y,
-                    color
-                );
-            });
-        });
-
-        // Платформа
+        // Создание платформы
         const platform = Bodies.rectangle(
-            CONFIG.GAME_WIDTH / 2,
-            CONFIG.PLATFORM.Y_POS - CONFIG.PLATFORM.HEIGHT/2,
-            CONFIG.PLATFORM.WIDTH,
-            CONFIG.PLATFORM.HEIGHT,
+            1920/2, 
+            config.platform.y - config.platform.height/2,
+            config.platform.width,
+            config.platform.height,
             {
                 isStatic: true,
-                label: 'platform',
                 render: {
                     sprite: {
                         texture: 'R1.jpg',
@@ -179,33 +95,47 @@
             }
         );
 
-        // Границы
+        // Создание персонажа
+        const character = Bodies.rectangle(
+            1920/2,
+            config.platform.y - config.platform.height - config.character.height/2,
+            config.character.width,
+            config.character.height,
+            {
+                chamfer: { radius: 15 },
+                inertia: Infinity,
+                render: {
+                    sprite: {
+                        texture: 'ManX.png',
+                        xScale: 0.5,
+                        yScale: 0.5
+                    }
+                }
+            }
+        );
+
+        // Границы мира
         const boundaries = [
-            Bodies.rectangle(-50, CONFIG.GAME_HEIGHT/2, 100, CONFIG.GAME_HEIGHT, { 
-                isStatic: true, 
-                render: { visible: false } 
-            }),
-            Bodies.rectangle(CONFIG.GAME_WIDTH + 50, CONFIG.GAME_HEIGHT/2, 100, CONFIG.GAME_HEIGHT, { 
-                isStatic: true, 
-                render: { visible: false } 
-            })
+            Bodies.rectangle(-50, 540, 100, 1080, { isStatic: true, render: { visible: false } }),
+            Bodies.rectangle(1970, 540, 100, 1080, { isStatic: true, render: { visible: false } })
         ];
 
-        World.add(engine.world, [platform, ...boundaries]);
+        // Добавление объектов в мир
+        World.add(engine.world, [platform, character, ...boundaries]);
 
-        // Обработка кликов
+        // Обработка кликов для создания боксов
         document.addEventListener('click', (e) => {
             const rect = render.canvas.getBoundingClientRect();
-            const scaleX = CONFIG.GAME_WIDTH / rect.width;
-            
+            const scaleX = 1920 / rect.width;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+
             const box = Bodies.rectangle(
-                (e.clientX - rect.left) * scaleX,
-                CONFIG.BOX.SPAWN_OFFSET,
-                CONFIG.BOX.SIZE,
-                CONFIG.BOX.SIZE,
+                mouseX,
+                config.box.spawnY,
+                config.box.size,
+                config.box.size,
                 {
-                    ...CONFIG.BOX.PHYSICS,
-                    label: 'box',
+                    ...config.box.physics,
                     render: {
                         sprite: {
                             texture: 'boxX.png',
@@ -215,26 +145,67 @@
                     }
                 }
             );
-            
+
             World.add(engine.world, box);
         });
 
-        // Запуск систем
+        // Управление персонажем
+        const keys = { left: false, right: false, up: false };
+        let isGrounded = false;
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': keys.left = true; break;
+                case 'ArrowRight': keys.right = true; break;
+                case 'ArrowUp': keys.up = true; break;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': keys.left = false; break;
+                case 'ArrowRight': keys.right = false; break;
+                case 'ArrowUp': keys.up = false; break;
+            }
+        });
+
+        // Игровой цикл
+        Events.on(engine, 'beforeUpdate', () => {
+            // Движение
+            if(keys.left) Body.setVelocity(character, { x: -config.character.speed, y: character.velocity.y });
+            if(keys.right) Body.setVelocity(character, { x: config.character.speed, y: character.velocity.y });
+            
+            // Прыжок
+            if(keys.up && isGrounded) {
+                Body.setVelocity(character, { x: character.velocity.x, y: config.character.jump });
+                isGrounded = false;
+            }
+            
+            // Фиксация поворота
+            Body.setAngle(character, 0);
+        });
+
+        // Проверка столкновений
+        Events.on(engine, 'collisionStart', (event) => {
+            event.pairs.forEach(pair => {
+                if(pair.bodyA === character || pair.bodyB === character) {
+                    isGrounded = true;
+                }
+            });
+        });
+
+        // Запуск
         Engine.run(engine);
         Render.run(render);
-        updateParticles();
 
+        // Масштабирование
         function resize() {
-            const canvas = render.canvas;
             const scale = Math.min(
-                window.innerWidth / CONFIG.GAME_WIDTH,
-                window.innerHeight / CONFIG.GAME_HEIGHT
+                window.innerWidth / 1920,
+                window.innerHeight / 1080
             );
-            
-            canvas.style.transform = `scale(${scale})`;
-            particlesCanvas.style.transform = `scale(${scale})`;
+            render.canvas.style.transform = `scale(${scale})`;
         }
-
         window.addEventListener('resize', resize);
         resize();
     </script>
