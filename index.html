@@ -1,213 +1,135 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Box Rain Game</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.18.0/matter.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Mobile Character</title>
+    <!-- Важно для мобильных устройств -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body {
+        * {
             margin: 0;
-            overflow: hidden;
-            cursor: crosshair;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* Убирает подсветку при касании */
         }
-        #game-container {
-            position: relative;
+
+        body {
+            background: #808080;
+            overflow: hidden;
+            touch-action: none; /* Блокирует стандартные жесты */
             width: 100vw;
             height: 100vh;
         }
-        #background {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 1;
+
+        #gameCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
         }
-        #game-canvas {
-            position: absolute;
-            z-index: 2;
+
+        /* Запрет выделения текста и контекстного меню */
+        canvas {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            outline: none;
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <img id="background" src="wall1.jpg" alt="Background">
-        <canvas id="game-canvas"></canvas>
-    </div>
+    <canvas id="gameCanvas"></canvas>
 
     <script>
-        const Engine = Matter.Engine,
-              Render = Matter.Render,
-              World = Matter.World,
-              Bodies = Matter.Bodies,
-              Body = Matter.Body,
-              Events = Matter.Events;
-
-        const engine = Engine.create();
-        const render = Render.create({
-            element: document.getElementById('game-container'),
-            engine: engine,
-            canvas: document.getElementById('game-canvas'),
-            options: {
-                width: 1920,
-                height: 1080,
-                wireframes: false,
-                background: 'transparent'
-            }
-        });
-
-        // Конфигурация
-        const config = {
-            platform: {
-                width: 1337,
-                height: 216,
-                y: 1080 - 216
-            },
-            box: {
-                size: 117,
-                spawnY: -50,
-                physics: {
-                    density: 0.8,
-                    restitution: 0.3
-                }
-            },
-            character: {
-                width: 75,
-                height: 103,
-                jump: -12,
-                speed: 6
-            }
+        // Инициализация Canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Персонаж
+        const character = {
+            img: new Image(),
+            x: 0,
+            y: 0,
+            targetX: 0,
+            targetY: 0,
+            speed: 0.1 // Скорость перемещения (0.1 = 10% расстояния за кадр)
         };
+        character.img.src = 'Kop.png'; // Путь к изображению
 
-        // Создание платформы
-        const platform = Bodies.rectangle(
-            1920/2, 
-            config.platform.y - config.platform.height/2,
-            config.platform.width,
-            config.platform.height,
-            {
-                isStatic: true,
-                render: {
-                    sprite: {
-                        texture: 'R1.jpg',
-                        xScale: 1,
-                        yScale: 1
-                    }
-                }
-            }
-        );
+        // Размеры персонажа
+        const CHAR_WIDTH = 64;
+        const CHAR_HEIGHT = 64;
 
-        // Создание персонажа
-        const character = Bodies.rectangle(
-            1920/2,
-            config.platform.y - config.platform.height - config.character.height/2,
-            config.character.width,
-            config.character.height,
-            {
-                chamfer: { radius: 15 },
-                inertia: Infinity,
-                render: {
-                    sprite: {
-                        texture: 'ManX.png',
-                        xScale: 0.5,
-                        yScale: 0.5
-                    }
-                }
-            }
-        );
+        // Настройка размеров Canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * devicePixelRatio;
+            canvas.height = window.innerHeight * devicePixelRatio;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+            
+            // Стартовая позиция по центру
+            character.x = window.innerWidth/2 - CHAR_WIDTH/2;
+            character.y = window.innerHeight/2 - CHAR_HEIGHT/2;
+            character.targetX = character.x;
+            character.targetY = character.y;
+        }
 
-        // Границы мира
-        const boundaries = [
-            Bodies.rectangle(-50, 540, 100, 1080, { isStatic: true, render: { visible: false } }),
-            Bodies.rectangle(1970, 540, 100, 1080, { isStatic: true, render: { visible: false } })
-        ];
+        // Плавное перемещение
+        function updatePosition() {
+            const dx = character.targetX - character.x;
+            const dy = character.targetY - character.y;
+            
+            character.x += dx * character.speed;
+            character.y += dy * character.speed;
+        }
 
-        // Добавление объектов в мир
-        World.add(engine.world, [platform, character, ...boundaries]);
-
-        // Обработка кликов для создания боксов
-        document.addEventListener('click', (e) => {
-            const rect = render.canvas.getBoundingClientRect();
-            const scaleX = 1920 / rect.width;
-            const mouseX = (e.clientX - rect.left) * scaleX;
-
-            const box = Bodies.rectangle(
-                mouseX,
-                config.box.spawnY,
-                config.box.size,
-                config.box.size,
-                {
-                    ...config.box.physics,
-                    render: {
-                        sprite: {
-                            texture: 'boxX.png',
-                            xScale: 1,
-                            yScale: 1
-                        }
-                    }
-                }
+        // Отрисовка
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(
+                character.img, 
+                character.x, 
+                character.y, 
+                CHAR_WIDTH, 
+                CHAR_HEIGHT
             );
-
-            World.add(engine.world, box);
-        });
-
-        // Управление персонажем
-        const keys = { left: false, right: false, up: false };
-        let isGrounded = false;
-
-        document.addEventListener('keydown', (e) => {
-            switch(e.key) {
-                case 'ArrowLeft': keys.left = true; break;
-                case 'ArrowRight': keys.right = true; break;
-                case 'ArrowUp': keys.up = true; break;
-            }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            switch(e.key) {
-                case 'ArrowLeft': keys.left = false; break;
-                case 'ArrowRight': keys.right = false; break;
-                case 'ArrowUp': keys.up = false; break;
-            }
-        });
+        }
 
         // Игровой цикл
-        Events.on(engine, 'beforeUpdate', () => {
-            // Движение
-            if(keys.left) Body.setVelocity(character, { x: -config.character.speed, y: character.velocity.y });
-            if(keys.right) Body.setVelocity(character, { x: config.character.speed, y: character.velocity.y });
-            
-            // Прыжок
-            if(keys.up && isGrounded) {
-                Body.setVelocity(character, { x: character.velocity.x, y: config.character.jump });
-                isGrounded = false;
-            }
-            
-            // Фиксация поворота
-            Body.setAngle(character, 0);
-        });
-
-        // Проверка столкновений
-        Events.on(engine, 'collisionStart', (event) => {
-            event.pairs.forEach(pair => {
-                if(pair.bodyA === character || pair.bodyB === character) {
-                    isGrounded = true;
-                }
-            });
-        });
-
-        // Запуск
-        Engine.run(engine);
-        Render.run(render);
-
-        // Масштабирование
-        function resize() {
-            const scale = Math.min(
-                window.innerWidth / 1920,
-                window.innerHeight / 1080
-            );
-            render.canvas.style.transform = `scale(${scale})`;
+        function gameLoop() {
+            updatePosition();
+            draw();
+            requestAnimationFrame(gameLoop);
         }
-        window.addEventListener('resize', resize);
-        resize();
+
+        // Обработка касаний
+        function handleTouch(e) {
+            e.preventDefault(); // Блокируем скролл страницы
+            const rect = canvas.getBoundingClientRect();
+            
+            character.targetX = e.touches[0].clientX - rect.left - CHAR_WIDTH/2;
+            character.targetY = e.touches[0].clientY - rect.top - CHAR_HEIGHT/2;
+        }
+
+        // Инициализация
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            gameLoop();
+            
+            // Слушатели событий
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            
+            // Для тестирования на ПК (можно удалить)
+            if(!('ontouchstart' in window)) {
+                canvas.addEventListener('click', (e) => {
+                    character.targetX = e.clientX - CHAR_WIDTH/2;
+                    character.targetY = e.clientY - CHAR_HEIGHT/2;
+                });
+            }
+        });
     </script>
 </body>
 </html>
