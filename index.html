@@ -4,135 +4,178 @@
     <title>Box Rain Game</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.18.0/matter.min.js"></script>
     <style>
+        /* styles.css */
         body {
             margin: 0;
             overflow: hidden;
             cursor: crosshair;
+            position: relative;
         }
-        canvas {
-            display: block;
+        
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        #game-canvas {
+            position: absolute;
+            z-index: 2;
+        }
+
+        #character {
+            position: absolute;
+            z-index: 3;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
+    <div id="game-container">
+        <img id="background" src="wall1.jpg" alt="Background">
+        <canvas id="game-canvas"></canvas>
+        <img id="character" src="R1.jpg" alt="Character">
+    </div>
+
     <script>
-        // Инициализация модулей Matter.js
+        // config.js
+        const CONFIG = {
+            GAME_WIDTH: 1920,
+            GAME_HEIGHT: 1080,
+            CHARACTER: {
+                WIDTH: 1337,
+                HEIGHT: 216,
+                Y_POSITION: 1080 - 216 // Нижний край экрана
+            },
+            BOX: {
+                SIZE: 177,
+                SPAWN_OFFSET: -100,
+                PHYSICS: {
+                    density: 0.8,
+                    friction: 0.5,
+                    restitution: 0.3
+                }
+            }
+        };
+
+        // main.js
         const Engine = Matter.Engine,
             Render = Matter.Render,
             World = Matter.World,
-            Bodies = Matter.Bodies,
-            Body = Matter.Body,
-            Events = Matter.Events;
+            Bodies = Matter.Bodies;
 
-        // Создание движка
-        const engine = Engine.create();
+        // Инициализация движка
+        const engine = Matter.Engine.create();
         
-        // Размеры игровой области
-        const gameWidth = 1920;
-        const gameHeight = 1080;
-
         // Настройка рендерера
-        const render = Render.create({
-            element: document.body,
+        const render = Matter.Render.create({
+            element: document.getElementById('game-container'),
             engine: engine,
+            canvas: document.getElementById('game-canvas'),
             options: {
-                width: gameWidth,
-                height: gameHeight,
+                width: CONFIG.GAME_WIDTH,
+                height: CONFIG.GAME_HEIGHT,
                 wireframes: false,
                 background: 'transparent'
             }
         });
 
-        // Загрузка изображений
-        const assets = {
-            box: new Image(),
-            character: new Image(),
-            background: new Image()
-        };
-
-        assets.box.src = 'boxX.png';
-        assets.character.src = 'R1.jpg';
-        assets.background.src = 'wall1.jpg';
-
-        // Создание поверхности (персонажа)
+        // Инициализация персонажа
         const character = Bodies.rectangle(
-            gameWidth/2, 
-            gameHeight - 108, // 216px высота персонажа / 2
-            1337, 
-            216, 
+            CONFIG.GAME_WIDTH / 2,
+            CONFIG.CHARACTER.Y_POSITION + CONFIG.CHARACTER.HEIGHT / 2,
+            CONFIG.CHARACTER.WIDTH,
+            CONFIG.CHARACTER.HEIGHT,
             {
                 isStatic: true,
                 render: {
-                    sprite: {
-                        texture: assets.character.src,
-                        xScale: 1,
-                        yScale: 1
-                    }
+                    fillStyle: 'transparent'
                 }
             }
         );
 
-        // Массив для коробок
-        let boxes = [];
+        // Границы мира
+        const boundaries = [
+            Bodies.rectangle( // Пол (персонаж)
+                CONFIG.GAME_WIDTH / 2,
+                CONFIG.GAME_HEIGHT + 50,
+                CONFIG.GAME_WIDTH,
+                100,
+                { isStatic: true, render: { visible: false } }
+            ),
+            Bodies.rectangle( // Левая стена
+                -50,
+                CONFIG.GAME_HEIGHT / 2,
+                100,
+                CONFIG.GAME_HEIGHT,
+                { isStatic: true, render: { visible: false } }
+            ),
+            Bodies.rectangle( // Правая стена
+                CONFIG.GAME_WIDTH + 50,
+                CONFIG.GAME_HEIGHT / 2,
+                100,
+                CONFIG.GAME_HEIGHT,
+                { isStatic: true, render: { visible: false } }
+            )
+        ];
 
-        // Обработчик клика мыши
+        // Добавление объектов в мир
+        World.add(engine.world, [character, ...boundaries]);
+
+        // Обработка кликов
         document.addEventListener('click', (e) => {
+            const rect = render.canvas.getBoundingClientRect();
+            const scaleX = render.canvas.width / rect.width;
+            const scaleY = render.canvas.height / rect.height;
+            
             const box = Bodies.rectangle(
-                e.clientX * (gameWidth / window.innerWidth), 
-                -100, 
-                177, 
-                177, 
+                (e.clientX - rect.left) * scaleX,
+                CONFIG.BOX.SPAWN_OFFSET,
+                CONFIG.BOX.SIZE,
+                CONFIG.BOX.SIZE,
                 {
-                    restitution: 0.3,
-                    friction: 0.5,
-                    density: 0.8,
+                    ...CONFIG.BOX.PHYSICS,
                     render: {
                         sprite: {
-                            texture: assets.box.src,
+                            texture: 'boxX.png',
                             xScale: 1,
                             yScale: 1
                         }
                     }
                 }
             );
-            boxes.push(box);
+            
             World.add(engine.world, box);
         });
 
-        // Добавление границ мира
-        World.add(engine.world, [
-            // Верхняя невидимая граница
-            Bodies.rectangle(gameWidth/2, -50, gameWidth, 100, { isStatic: true, render: { visible: false } }),
-            // Боковые границы
-            Bodies.rectangle(-50, gameHeight/2, 100, gameHeight, { isStatic: true, render: { visible: false } }),
-            Bodies.rectangle(gameWidth + 50, gameHeight/2, 100, gameHeight, { isStatic: true, render: { visible: false } })
-        ]);
-
-        // Добавление персонажа в мир
-        World.add(engine.world, character);
-
-        // Кастомный рендеринг для фона
-        render.canvas.style.background = `url(${assets.background.src}) center/cover no-repeat`;
-
         // Запуск движка
         Engine.run(engine);
-        Render.run(render);
+        Matter.Render.run(render);
 
-        // Адаптация под размер окна
-        window.addEventListener('resize', () => {
-            render.options.width = window.innerWidth;
-            render.options.height = window.innerHeight;
-            Render.lookAt(render, {
-                min: { x: 0, y: 0 },
-                max: { x: gameWidth, y: gameHeight }
-            });
-        });
+        // Адаптация под размер экрана
+        function resize() {
+            const canvas = render.canvas;
+            const container = document.getElementById('game-container');
+            
+            const scale = Math.min(
+                window.innerWidth / CONFIG.GAME_WIDTH,
+                window.innerHeight / CONFIG.GAME_HEIGHT
+            );
+            
+            canvas.style.transform = `scale(${scale})`;
+            container.style.height = `${window.innerHeight}px`;
+        }
 
-        // Первоначальная настройка камеры
-        Render.lookAt(render, {
-            min: { x: 0, y: 0 },
-            max: { x: gameWidth, y: gameHeight }
-        });
+        window.addEventListener('resize', resize);
+        resize();
     </script>
 </body>
 </html>
