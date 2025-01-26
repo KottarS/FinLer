@@ -40,16 +40,17 @@
         const Engine = Matter.Engine,
             Render = Matter.Render,
             World = Matter.World,
-            Bodies = Matter.Bodies;
+            Bodies = Matter.Bodies,
+            Events = Matter.Events,
+            Body = Matter.Body;
 
-        // Конфигурация
         const CONFIG = {
             GAME_WIDTH: 1920,
             GAME_HEIGHT: 1080,
             PLATFORM: {
                 WIDTH: 1337,
                 HEIGHT: 216,
-                Y_POS: 1080 - 216 // Нижний край экрана
+                Y_POS: 1080 - 216
             },
             BOX: {
                 SIZE: 117,
@@ -59,13 +60,16 @@
                     friction: 0.5,
                     restitution: 0.3
                 }
+            },
+            PARTICLES: {
+                COUNT: 5,
+                SIZE: 5,
+                LIFE: 30,
+                SPEED: 0.5
             }
         };
 
-        // Инициализация движка
         const engine = Engine.create();
-        
-        // Настройка рендерера
         const render = Render.create({
             element: document.getElementById('game-container'),
             engine: engine,
@@ -78,7 +82,57 @@
             }
         });
 
-        // Создание платформы (R1.jpg)
+        // Система частиц
+        const particles = [];
+        
+        function createParticles(position, color) {
+            for(let i = 0; i < CONFIG.PARTICLES.COUNT; i++) {
+                const particle = Bodies.circle(
+                    position.x,
+                    position.y,
+                    CONFIG.PARTICLES.SIZE,
+                    {
+                        render: {
+                            fillStyle: color,
+                            strokeStyle: '#fff',
+                            lineWidth: 2
+                        },
+                        frictionAir: 0.05,
+                        life: CONFIG.PARTICLES.LIFE
+                    }
+                );
+                
+                Body.setVelocity(particle, {
+                    x: (Math.random() - 0.5) * CONFIG.PARTICLES.SPEED * 10,
+                    y: (Math.random() - 0.5) * CONFIG.PARTICLES.SPEED * 10
+                });
+                
+                particles.push(particle);
+                World.add(engine.world, particle);
+            }
+        }
+
+        // Обработчик столкновений
+        Events.on(engine, 'collisionStart', (event) => {
+            event.pairs.forEach((pair) => {
+                const bodyA = pair.bodyA;
+                const bodyB = pair.bodyB;
+                
+                // Определение цвета частиц
+                let color = '#FFD700';
+                if(bodyA.label === 'box' || bodyB.label === 'box') {
+                    color = '#FF4500';
+                }
+
+                // Создание частиц в точке столкновения
+                createParticles(
+                    pair.collision.supports[0],
+                    color
+                );
+            });
+        });
+
+        // Платформа
         const platform = Bodies.rectangle(
             CONFIG.GAME_WIDTH / 2,
             CONFIG.PLATFORM.Y_POS - CONFIG.PLATFORM.HEIGHT/2,
@@ -86,6 +140,7 @@
             CONFIG.PLATFORM.HEIGHT,
             {
                 isStatic: true,
+                label: 'platform',
                 render: {
                     sprite: {
                         texture: 'R1.jpg',
@@ -96,7 +151,7 @@
             }
         );
 
-        // Границы мира
+        // Границы
         const boundaries = [
             Bodies.rectangle(-50, CONFIG.GAME_HEIGHT/2, 100, CONFIG.GAME_HEIGHT, { 
                 isStatic: true, 
@@ -108,24 +163,21 @@
             })
         ];
 
-        // Добавление объектов в мир
         World.add(engine.world, [platform, ...boundaries]);
 
         // Обработка кликов
         document.addEventListener('click', (e) => {
             const rect = render.canvas.getBoundingClientRect();
             const scaleX = CONFIG.GAME_WIDTH / rect.width;
-            const scaleY = CONFIG.GAME_HEIGHT / rect.height;
-            
-            const mouseX = (e.clientX - rect.left) * scaleX;
             
             const box = Bodies.rectangle(
-                mouseX,
+                (e.clientX - rect.left) * scaleX,
                 CONFIG.BOX.SPAWN_OFFSET,
                 CONFIG.BOX.SIZE,
                 CONFIG.BOX.SIZE,
                 {
                     ...CONFIG.BOX.PHYSICS,
+                    label: 'box',
                     render: {
                         sprite: {
                             texture: 'boxX.png',
@@ -139,11 +191,21 @@
             World.add(engine.world, box);
         });
 
-        // Запуск движка
+        // Удаление старых частиц
+        setInterval(() => {
+            particles.forEach((particle, index) => {
+                if(particle.life <= 0) {
+                    World.remove(engine.world, particle);
+                    particles.splice(index, 1);
+                } else {
+                    particle.life--;
+                }
+            });
+        }, 1000/60);
+
         Engine.run(engine);
         Render.run(render);
 
-        // Масштабирование
         function resize() {
             const canvas = render.canvas;
             const scale = Math.min(
