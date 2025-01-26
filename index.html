@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Основы безопасности и защиты нахуй Китая ебучего</title>
+    <title>Основы безопасности чего нахуй? какой родины ебаной бля?</title>
     <style>
         * {
             margin: 0;
@@ -57,7 +57,6 @@
         }
 
         .section-title {
-            color: #2c3e50;
             font-size: 20px;
             margin-bottom: 15px;
             cursor: pointer;
@@ -65,10 +64,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 10px;
+            border-radius: 8px;
         }
 
         .section-title:hover {
-            color: #e74c3c;
+            opacity: 0.9;
         }
 
         .dropdown-icon {
@@ -106,20 +107,41 @@
             color: #e74c3c;
             font-weight: bold;
         }
+
+        /* Цвета для секций */
+        #teacher-title {
+            background-color: #4CAF50; /* Зеленый */
+            color: white;
+        }
+
+        #theme-title {
+            background-color: #F44336; /* Красный */
+            color: white;
+        }
+
+        #homework-title {
+            background-color: #FFEB3B; /* Желтый */
+            color: black;
+        }
+
+        #place-title {
+            background-color: #9C27B0; /* Фиолетовый */
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Основы безопасности<br>и защиты Родины</h1>
+            <h1>Основы анала<br>и защиты Китая</h1>
             <div class="lesson-info">
-                3-й урок (10:30 - 11:10)
+                73-й урок (04:30 - 25:10)
             </div>
         </div>
 
         <div class="section">
-            <div class="section-title" onclick="toggleContent('teacher')">
-                Преподаватель
+            <div id="teacher-title" class="section-title" onclick="toggleContent('teacher')">
+                Препод ебаный
                 <span class="dropdown-icon">▼</span>
             </div>
             <div id="teacher" class="section-content">
@@ -128,7 +150,7 @@
         </div>
 
         <div class="section">
-            <div class="section-title" onclick="toggleContent('theme')">
+            <div id="theme-title" class="section-title" onclick="toggleContent('theme')">
                 Тема
                 <span class="dropdown-icon">▼</span>
             </div>
@@ -141,23 +163,23 @@
         </div>
 
         <div class="section">
-            <div class="section-title" onclick="toggleContent('homework')">
+            <div id="homework-title" class="section-title" onclick="toggleContent('homework')">
                 Домашнее задание
                 <span class="dropdown-icon">▼</span>
             </div>
             <div id="homework" class="section-content">
                 <p class="task">
-                    Написать рэп на тему <span class="highlight">«Какие жижки лучше покупать для решения конфликтов в семье?»</span>.<br>
-                    <br>В эссе необходимо:
-                    <br>✓ Описать конкретную жижку
-                    <br>✓ Алгоритм как ебать училку в очко
-                    <br>✓ Объем не менее 999.999 слов
+                    Написать рэп на тему <span class="highlight">Как ебать училку в очко жоска</span>.<br>
+                    <br>В рэпе необходимо:
+                    <br>✓ Описать конкретную ситуацию gang bang ебли
+                    <br>✓ Как заплэниить на Б плэнте
+                    <br>✓ Объем не менее 666.666 слов
                 </p>
             </div>
         </div>
 
         <div class="section">
-            <div class="section-title" onclick="toggleContent('place')">
+            <div id="place-title" class="section-title" onclick="toggleContent('place')">
                 Место
                 <span class="dropdown-icon">▼</span>
             </div>
