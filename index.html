@@ -1,10 +1,185 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Мой первый сайт</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Основы безопасности и защиты Родины</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+
+        .lesson-info {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin: 25px 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: color 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title:hover {
+            color: #e74c3c;
+        }
+
+        .dropdown-icon {
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+
+        .section-content {
+            display: none;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-top: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .teacher {
+            font-weight: bold;
+            color: #34495e;
+            font-size: 18px;
+        }
+
+        .task {
+            color: #333;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h1>Привет, мир!</h1>
-    <p>Это самый простой сайт на HTML</p>
+    <div class="container">
+        <div class="header">
+            <h1>Основы безопасности<br>и защиты Родины</h1>
+            <div class="lesson-info">
+                3-й урок (10:30 - 11:10)
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title" onclick="toggleContent('teacher')">
+                Преподаватель
+                <span class="dropdown-icon">▼</span>
+            </div>
+            <div id="teacher" class="section-content">
+                <p class="teacher">Малышева Наталья Викторовна</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title" onclick="toggleContent('theme')">
+                Тема
+                <span class="dropdown-icon">▼</span>
+            </div>
+            <div id="theme" class="section-content">
+                <div class="task">
+                    <hr style="margin: 15px 0; border-color: #eee">
+                    <!-- Тема будет добавлена позже -->
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title" onclick="toggleContent('homework')">
+                Домашнее задание
+                <span class="dropdown-icon">▼</span>
+            </div>
+            <div id="homework" class="section-content">
+                <p class="task">
+                    Написать эссе на тему <span class="highlight">«Какие конструктивные способы решения конфликтов применяются в моей семье?»</span>.<br>
+                    <br>В эссе необходимо:
+                    <br>✓ Описать конкретную ситуацию конфликта
+                    <br>✓ Алгоритм ее решения
+                    <br>✓ Объем не менее 100 слов
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title" onclick="toggleContent('place')">
+                Место
+                <span class="dropdown-icon">▼</span>
+            </div>
+            <div id="place" class="section-content">
+                <!-- Информация о месте будет добавлена позже -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleContent(id) {
+            const content = document.getElementById(id);
+            const icon = content.previousElementSibling.querySelector('.dropdown-icon');
+            
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                content.style.display = 'block';
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+    </script>
 </body>
 </html>
