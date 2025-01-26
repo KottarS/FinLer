@@ -17,10 +17,13 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+        .input-group {
+            position: relative;
+            margin: 15px 0;
+        }
         textarea {
             width: 100%;
             height: 100px;
-            margin: 10px 0;
             padding: 10px;
             border: 2px solid #4CAF50;
             border-radius: 5px;
@@ -39,28 +42,51 @@
         button:hover {
             background: #45a049;
         }
-        .warning {
-            color: #ff4444;
+        .copy-btn {
+            position: absolute;
+            right: 10px;
+            bottom: 15px;
+            padding: 8px 15px;
+            font-size: 14px;
+            background: #2196F3;
+        }
+        .copy-btn:hover {
+            background: #1976D2;
+        }
+        .message {
             font-size: 14px;
             margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
+        .success { color: #4CAF50; }
+        .warning { color: #ff4444; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔐 Шифратор/Дешифратор «Зеркальный квадрат»</h1>
-        <textarea id="input" placeholder="Введите текст..."></textarea>
+        
+        <div class="input-group">
+            <textarea id="input" placeholder="Введите текст..."></textarea>
+        </div>
+
         <div>
             <button onclick="encrypt()">Зашифровать →</button>
             <button onclick="decrypt()">← Дешифровать</button>
             <button onclick="clearAll()">Очистить</button>
         </div>
-        <textarea id="output" readonly placeholder="Результат..."></textarea>
-        <div class="warning" id="warning"></div>
+
+        <div class="input-group">
+            <textarea id="output" readonly placeholder="Результат..."></textarea>
+            <button class="copy-btn" onclick="copyOutput()">Копировать</button>
+        </div>
+
+        <div id="message" class="message"></div>
     </div>
 
     <script>
-        // Таблица замены (русский, английский, финский)
+        // Таблица замены символов
         const substitutionTable = {
             // Русский
             'А': 'ÄR', 'Б': 'B%', 'В': 'V#', 'Г': 'G&', 'Д': 'DΔ', 
@@ -105,7 +131,9 @@
             const chunkSize = 2;
             const chunks = [];
             for (let i = 0; i < text.length; i += chunkSize) {
-                chunks.push(text.slice(i, i + chunkSize));
+                let chunk = text.slice(i, i + chunkSize);
+                if (chunk.length < chunkSize) chunk += ' ';
+                chunks.push(chunk);
             }
             return chunks.reverse().join('');
         }
@@ -118,7 +146,7 @@
         }
 
         function encrypt() {
-            document.getElementById('warning').innerText = '';
+            showMessage('', 'success');
             const input = document.getElementById('input').value;
             
             let result = substitute(input);
@@ -140,8 +168,7 @@
                 const shift = (i % 3 + 1) * 2;
                 const code = parseInt(hex, 16);
                 if (isNaN(code) || code % shift !== 0) {
-                    document.getElementById('warning').innerText = 
-                        `⚠️ Ошибка в сегменте: ${segment}`;
+                    showMessage(`Ошибка в сегменте: ${segment}`, 'warning');
                     return null;
                 }
                 mirrored += String.fromCharCode(code / shift);
@@ -155,7 +182,7 @@
             for (let i = 0; i < text.length; i += chunkSize) {
                 chunks.push(text.slice(i, i + chunkSize));
             }
-            return chunks.reverse().join('');
+            return chunks.reverse().join('').trim();
         }
 
         function reverseSubstitute(text) {
@@ -169,7 +196,7 @@
         }
 
         function decrypt() {
-            document.getElementById('warning').innerText = '';
+            showMessage('', 'success');
             const encrypted = document.getElementById('input').value;
             
             const mirrored = removeAsciiShift(encrypted);
@@ -181,11 +208,29 @@
             document.getElementById('output').value = result;
         }
 
-        // ================= ОЧИСТКА =================
+        // ================= ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =================
+        async function copyOutput() {
+            try {
+                const text = document.getElementById('output').value;
+                await navigator.clipboard.writeText(text);
+                showMessage('Текст скопирован!', 'success');
+            } catch (err) {
+                showMessage('Ошибка копирования!', 'warning');
+            }
+        }
+
         function clearAll() {
             document.getElementById('input').value = '';
             document.getElementById('output').value = '';
-            document.getElementById('warning').innerText = '';
+            showMessage('', 'success');
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.opacity = text ? '1' : '0';
+            if (text) setTimeout(() => messageEl.style.opacity = '0', 2000);
         }
     </script>
 </body>
