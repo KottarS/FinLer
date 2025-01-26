@@ -1,237 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Универсальный шифратор/дешифратор</title>
-    <meta charset="UTF-8">
+    <title>Game Character</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
         }
-        .container {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        
+        #character {
+            width: 1337px;
+            height: 216px;
+            background-image: url('R1.jpg');
+            background-size: cover;
+            /* Добавим временную рамку для визуализации */
+            border: 2px dashed #333;
         }
-        .input-group {
-            position: relative;
-            margin: 15px 0;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            padding: 10px;
-            border: 2px solid #4CAF50;
-            border-radius: 5px;
-            resize: vertical;
-        }
-        button {
-            padding: 12px 25px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 16px;
-            margin: 5px;
-        }
-        button:hover {
-            background: #45a049;
-        }
-        .copy-btn {
-            position: absolute;
-            right: 10px;
-            bottom: 15px;
-            padding: 8px 15px;
-            font-size: 14px;
-            background: #2196F3;
-        }
-        .copy-btn:hover {
-            background: #1976D2;
-        }
-        .message {
-            font-size: 14px;
-            margin-top: 10px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .success { color: #4CAF50; }
-        .warning { color: #ff4444; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔐 Шифратор/Дешифратор «Зеркальный квадрат»</h1>
-        
-        <div class="input-group">
-            <textarea id="input" placeholder="Введите текст..."></textarea>
-        </div>
-
-        <div>
-            <button onclick="encrypt()">Зашифровать →</button>
-            <button onclick="decrypt()">← Дешифровать</button>
-            <button onclick="clearAll()">Очистить</button>
-        </div>
-
-        <div class="input-group">
-            <textarea id="output" readonly placeholder="Результат..."></textarea>
-            <button class="copy-btn" onclick="copyOutput()">Копировать</button>
-        </div>
-
-        <div id="message" class="message"></div>
-    </div>
-
-    <script>
-        // Таблица замены символов
-        const substitutionTable = {
-            // Русский
-            'А': 'ÄR', 'Б': 'B%', 'В': 'V#', 'Г': 'G&', 'Д': 'DΔ', 
-            'Е': 'E€', 'Ё': 'YO', 'Ж': 'Ž', 'З': 'Z3', 'И': 'IΠ', 
-            'Й': 'JЙ', 'К': 'Kκ', 'Л': 'LΛ', 'М': 'Mμ', 'Н': 'HÑ', 
-            'О': 'OØ', 'П': 'PΠ', 'Р': 'R®', 'С': 'S$', 'Т': 'Tτ', 
-            'У': 'UÜ', 'Ф': 'FΦ', 'Х': 'XΧ', 'Ц': 'CЦ', 'Ч': 'Č', 
-            'Ш': 'Š', 'Щ': 'Ŝ', 'Ъ': 'Ъ', 'Ы': 'YI', 'Ь': 'Ь', 
-            'Э': 'EÄ', 'Ю': 'JU', 'Я': 'JA',
-            
-            // Английский
-            'A': 'AÅ', 'B': 'Bβ', 'C': 'C©', 'D': 'DÐ', 'E': 'EÆ', 
-            'F': 'Fƒ', 'G': 'GΓ', 'H': 'HΨ', 'I': 'IÍ', 'J': 'JĴ', 
-            'K': 'K₭', 'L': 'LŁ', 'M': 'MΜ', 'N': 'NÑ', 'O': 'OÖ', 
-            'P': 'PÞ', 'Q': 'QΩ', 'R': 'RΡ', 'S': 'Sß', 'T': 'TŦ', 
-            'U': 'UÛ', 'V': 'VѶ', 'W': 'WŴ', 'X': 'XΞ', 'Y': 'YŸ', 
-            'Z': 'ZŽ',
-            
-            // Финский
-            'Ä': 'ÄÄ', 'Ö': 'ÖÖ', 'Å': 'ÅÅ',
-            
-            // Спецсимволы
-            ' ': '§', '?': '¿', '!': '¡', ',': '‚', '.': '•',
-            '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅',
-            '6': '₆', '7': '₇', '8': '₈', '9': '₉', '0': '₀'
-        };
-
-        // Обратная таблица для дешифровки
-        const reverseTable = {};
-        Object.entries(substitutionTable).forEach(([key, value]) => {
-            reverseTable[value] = key;
-        });
-
-        // ================= ШИФРОВАНИЕ =================
-        function substitute(text) {
-            return text.toUpperCase().split('').map(char => {
-                return substitutionTable[char] || char;
-            }).join('');
-        }
-
-        function mirror(text) {
-            const chunkSize = 2;
-            const chunks = [];
-            for (let i = 0; i < text.length; i += chunkSize) {
-                let chunk = text.slice(i, i + chunkSize);
-                if (chunk.length < chunkSize) chunk += ' ';
-                chunks.push(chunk);
-            }
-            return chunks.reverse().join('');
-        }
-
-        function addAsciiShift(text) {
-            return text.split('').map((char, index) => {
-                const shift = (index % 3 + 1) * 2;
-                return char + (char.charCodeAt(0) * shift).toString(16);
-            }).join(':');
-        }
-
-        function encrypt() {
-            showMessage('', 'success');
-            const input = document.getElementById('input').value;
-            
-            let result = substitute(input);
-            result = mirror(result);
-            result = addAsciiShift(result);
-            
-            document.getElementById('output').value = result;
-        }
-
-        // ================= ДЕШИФРОВКА =================
-        function removeAsciiShift(encrypted) {
-            const segments = encrypted.split(':');
-            let mirrored = '';
-            for (let i = 0; i < segments.length; i++) {
-                const segment = segments[i];
-                if (!segment) continue;
-                const char = segment[0];
-                const hex = segment.slice(1);
-                const shift = (i % 3 + 1) * 2;
-                const code = parseInt(hex, 16);
-                if (isNaN(code) || code % shift !== 0) {
-                    showMessage(`Ошибка в сегменте: ${segment}`, 'warning');
-                    return null;
-                }
-                mirrored += String.fromCharCode(code / shift);
-            }
-            return mirrored;
-        }
-
-        function unmirror(text) {
-            const chunkSize = 2;
-            const chunks = [];
-            for (let i = 0; i < text.length; i += chunkSize) {
-                chunks.push(text.slice(i, i + chunkSize));
-            }
-            return chunks.reverse().join('').trim();
-        }
-
-        function reverseSubstitute(text) {
-            const chunkSize = 2;
-            let result = '';
-            for (let i = 0; i < text.length; i += chunkSize) {
-                const code = text.slice(i, i + chunkSize);
-                result += reverseTable[code] || code;
-            }
-            return result;
-        }
-
-        function decrypt() {
-            showMessage('', 'success');
-            const encrypted = document.getElementById('input').value;
-            
-            const mirrored = removeAsciiShift(encrypted);
-            if (!mirrored) return;
-            
-            const substituted = unmirror(mirrored);
-            const result = reverseSubstitute(substituted);
-            
-            document.getElementById('output').value = result;
-        }
-
-        // ================= ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =================
-        async function copyOutput() {
-            try {
-                const text = document.getElementById('output').value;
-                await navigator.clipboard.writeText(text);
-                showMessage('Текст скопирован!', 'success');
-            } catch (err) {
-                showMessage('Ошибка копирования!', 'warning');
-            }
-        }
-
-        function clearAll() {
-            document.getElementById('input').value = '';
-            document.getElementById('output').value = '';
-            showMessage('', 'success');
-        }
-
-        function showMessage(text, type) {
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = text;
-            messageEl.className = `message ${type}`;
-            messageEl.style.opacity = text ? '1' : '0';
-            if (text) setTimeout(() => messageEl.style.opacity = '0', 2000);
-        }
-    </script>
+    <div id="character"></div>
 </body>
 </html>
