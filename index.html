@@ -2,38 +2,35 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Mobile Character</title>
-    <!-- Важно для мобильных устройств -->
+    <title>Room Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent; /* Убирает подсветку при касании */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background: #808080;
             overflow: hidden;
-            touch-action: none; /* Блокирует стандартные жесты */
+            touch-action: none;
             width: 100vw;
             height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         #gameCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
+            position: relative;
         }
-
-        /* Запрет выделения текста и контекстного меню */
+        
         canvas {
             -webkit-user-select: none;
             -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
-            outline: none;
         }
     </style>
 </head>
@@ -41,94 +38,141 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // Инициализация Canvas
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        
+        // Конфигурация комнаты
+        const ROOM_SIZE = 350;
+        const BORDER_SIZE = 15;
+        const TOTAL_SIZE = ROOM_SIZE + BORDER_SIZE * 2;
         
         // Персонаж
         const character = {
             img: new Image(),
-            x: 0,
-            y: 0,
+            x: BORDER_SIZE + (ROOM_SIZE - 64)/2, // Стартовая позиция по центру комнаты
+            y: BORDER_SIZE + (ROOM_SIZE - 64)/2,
             targetX: 0,
             targetY: 0,
-            speed: 0.1 // Скорость перемещения (0.1 = 10% расстояния за кадр)
+            speed: 0.1,
+            width: 64,
+            height: 64
         };
-        character.img.src = 'Kop.png'; // Путь к изображению
+        character.img.src = 'Kop.png';
 
-        // Размеры персонажа
-        const CHAR_WIDTH = 64;
-        const CHAR_HEIGHT = 64;
-
-        // Настройка размеров Canvas
-        function resizeCanvas() {
-            canvas.width = window.innerWidth * devicePixelRatio;
-            canvas.height = window.innerHeight * devicePixelRatio;
-            canvas.style.width = window.innerWidth + 'px';
-            canvas.style.height = window.innerHeight + 'px';
-            ctx.scale(devicePixelRatio, devicePixelRatio);
+        // Настройка Canvas
+        function setupCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = TOTAL_SIZE * dpr;
+            canvas.height = TOTAL_SIZE * dpr;
+            canvas.style.width = TOTAL_SIZE + 'px';
+            canvas.style.height = TOTAL_SIZE + 'px';
+            ctx.scale(dpr, dpr);
             
-            // Стартовая позиция по центру
-            character.x = window.innerWidth/2 - CHAR_WIDTH/2;
-            character.y = window.innerHeight/2 - CHAR_HEIGHT/2;
+            // Инициализация целей
             character.targetX = character.x;
             character.targetY = character.y;
         }
 
-        // Плавное перемещение
+        // Ограничение движения в пределах комнаты
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
         function updatePosition() {
             const dx = character.targetX - character.x;
             const dy = character.targetY - character.y;
             
             character.x += dx * character.speed;
             character.y += dy * character.speed;
+            
+            // Границы комнаты
+            const minX = BORDER_SIZE;
+            const maxX = BORDER_SIZE + ROOM_SIZE - character.width;
+            const minY = BORDER_SIZE;
+            const maxY = BORDER_SIZE + ROOM_SIZE - character.height;
+            
+            character.x = clamp(character.x, minX, maxX);
+            character.y = clamp(character.y, minY, maxY);
         }
 
-        // Отрисовка
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(
-                character.img, 
-                character.x, 
-                character.y, 
-                CHAR_WIDTH, 
-                CHAR_HEIGHT
+        function drawRoom() {
+            // Черная рамка
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, TOTAL_SIZE, TOTAL_SIZE);
+            
+            // Белая внутренняя часть
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(
+                BORDER_SIZE, 
+                BORDER_SIZE, 
+                ROOM_SIZE, 
+                ROOM_SIZE
             );
         }
 
-        // Игровой цикл
+        function drawCharacter() {
+            ctx.drawImage(
+                character.img,
+                character.x,
+                character.y,
+                character.width,
+                character.height
+            );
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawRoom();
+            drawCharacter();
+        }
+
         function gameLoop() {
             updatePosition();
             draw();
             requestAnimationFrame(gameLoop);
         }
 
-        // Обработка касаний
-        function handleTouch(e) {
-            e.preventDefault(); // Блокируем скролл страницы
+        function handleInput(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
+            const scaleX = TOTAL_SIZE / canvas.width;
+            const scaleY = TOTAL_SIZE / canvas.height;
             
-            character.targetX = e.touches[0].clientX - rect.left - CHAR_WIDTH/2;
-            character.targetY = e.touches[0].clientY - rect.top - CHAR_HEIGHT/2;
+            let targetX = (clientX - rect.left) * scaleX - character.width/2;
+            let targetY = (clientY - rect.top) * scaleY - character.height/2;
+            
+            // Ограничение целей внутри комнаты
+            const maxTargetX = BORDER_SIZE + ROOM_SIZE - character.width;
+            const maxTargetY = BORDER_SIZE + ROOM_SIZE - character.height;
+            
+            character.targetX = clamp(targetX, BORDER_SIZE, maxTargetX);
+            character.targetY = clamp(targetY, BORDER_SIZE, maxTargetY);
         }
 
         // Инициализация
         window.addEventListener('load', () => {
-            resizeCanvas();
+            setupCanvas();
             gameLoop();
             
-            // Слушатели событий
-            window.addEventListener('resize', resizeCanvas);
-            canvas.addEventListener('touchstart', handleTouch);
-            canvas.addEventListener('touchmove', handleTouch);
+            // Обработчики событий
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleInput(e.touches[0].clientX, e.touches[0].clientY);
+            });
             
-            // Для тестирования на ПК (можно удалить)
-            if(!('ontouchstart' in window)) {
-                canvas.addEventListener('click', (e) => {
-                    character.targetX = e.clientX - CHAR_WIDTH/2;
-                    character.targetY = e.clientY - CHAR_HEIGHT/2;
-                });
-            }
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                handleInput(e.touches[0].clientX, e.touches[0].clientY);
+            });
+
+            // Для ПК
+            canvas.addEventListener('click', (e) => {
+                handleInput(e.clientX, e.clientY);
+            });
+        });
+
+        // Ресайз окна
+        window.addEventListener('resize', () => {
+            setupCanvas();
         });
     </script>
 </body>
