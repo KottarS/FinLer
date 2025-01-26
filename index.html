@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Универсальный шифратор «Зеркальный квадрат»</title>
+    <title>Универсальный шифратор/дешифратор</title>
     <meta charset="UTF-8">
     <style>
         body {
@@ -48,18 +48,19 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔐 Универсальный шифратор</h1>
-        <textarea id="input" placeholder="Введите текст на русском/английском/финском..."></textarea>
+        <h1>🔐 Шифратор/Дешифратор «Зеркальный квадрат»</h1>
+        <textarea id="input" placeholder="Введите текст..."></textarea>
         <div>
             <button onclick="encrypt()">Зашифровать →</button>
-            <button onclick="clearText()">Очистить</button>
+            <button onclick="decrypt()">← Дешифровать</button>
+            <button onclick="clearAll()">Очистить</button>
         </div>
         <textarea id="output" readonly placeholder="Результат..."></textarea>
         <div class="warning" id="warning"></div>
     </div>
 
     <script>
-        // Полная таблица замены для всех языков
+        // Таблица замены (русский, английский, финский)
         const substitutionTable = {
             // Русский
             'А': 'ÄR', 'Б': 'B%', 'В': 'V#', 'Г': 'G&', 'Д': 'DΔ', 
@@ -87,21 +88,16 @@
             '6': '₆', '7': '₇', '8': '₈', '9': '₉', '0': '₀'
         };
 
-        // Автоматическое создание обратной таблицы для предупреждений
+        // Обратная таблица для дешифровки
         const reverseTable = {};
         Object.entries(substitutionTable).forEach(([key, value]) => {
             reverseTable[value] = key;
         });
 
+        // ================= ШИФРОВАНИЕ =================
         function substitute(text) {
             return text.toUpperCase().split('').map(char => {
-                const replaced = substitutionTable[char] || char;
-                // Проверка на уникальность кодов
-                if (!reverseTable[replaced] && replaced !== char) {
-                    document.getElementById('warning').innerText = 
-                        `⚠️ Символ '${char}' зашифрован не уникально!`;
-                }
-                return replaced;
+                return substitutionTable[char] || char;
             }).join('');
         }
 
@@ -109,17 +105,14 @@
             const chunkSize = 2;
             const chunks = [];
             for (let i = 0; i < text.length; i += chunkSize) {
-                let chunk = text.slice(i, i + chunkSize);
-                // Добавляем padding если необходимо
-                if (chunk.length < chunkSize) chunk += ' ';
-                chunks.push(chunk);
+                chunks.push(text.slice(i, i + chunkSize));
             }
             return chunks.reverse().join('');
         }
 
         function addAsciiShift(text) {
             return text.split('').map((char, index) => {
-                const shift = (index % 3 + 1) * 2; // Динамический сдвиг: 2,4,6
+                const shift = (index % 3 + 1) * 2;
                 return char + (char.charCodeAt(0) * shift).toString(16);
             }).join(':');
         }
@@ -135,7 +128,61 @@
             document.getElementById('output').value = result;
         }
 
-        function clearText() {
+        // ================= ДЕШИФРОВКА =================
+        function removeAsciiShift(encrypted) {
+            const segments = encrypted.split(':');
+            let mirrored = '';
+            for (let i = 0; i < segments.length; i++) {
+                const segment = segments[i];
+                if (!segment) continue;
+                const char = segment[0];
+                const hex = segment.slice(1);
+                const shift = (i % 3 + 1) * 2;
+                const code = parseInt(hex, 16);
+                if (isNaN(code) || code % shift !== 0) {
+                    document.getElementById('warning').innerText = 
+                        `⚠️ Ошибка в сегменте: ${segment}`;
+                    return null;
+                }
+                mirrored += String.fromCharCode(code / shift);
+            }
+            return mirrored;
+        }
+
+        function unmirror(text) {
+            const chunkSize = 2;
+            const chunks = [];
+            for (let i = 0; i < text.length; i += chunkSize) {
+                chunks.push(text.slice(i, i + chunkSize));
+            }
+            return chunks.reverse().join('');
+        }
+
+        function reverseSubstitute(text) {
+            const chunkSize = 2;
+            let result = '';
+            for (let i = 0; i < text.length; i += chunkSize) {
+                const code = text.slice(i, i + chunkSize);
+                result += reverseTable[code] || code;
+            }
+            return result;
+        }
+
+        function decrypt() {
+            document.getElementById('warning').innerText = '';
+            const encrypted = document.getElementById('input').value;
+            
+            const mirrored = removeAsciiShift(encrypted);
+            if (!mirrored) return;
+            
+            const substituted = unmirror(mirrored);
+            const result = reverseSubstitute(substituted);
+            
+            document.getElementById('output').value = result;
+        }
+
+        // ================= ОЧИСТКА =================
+        function clearAll() {
             document.getElementById('input').value = '';
             document.getElementById('output').value = '';
             document.getElementById('warning').innerText = '';
