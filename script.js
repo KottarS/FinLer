@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             imageFrame.className = 'image-frame';
             
             const img = document.createElement('img');
-            img.src = `h${i}.jpg`; // Путь к изображениям
+            img.src = `h${i}.JPG`; // Путь к изображениям
             img.alt = `Фото ${i}`;
             
             imageFrame.appendChild(img);
