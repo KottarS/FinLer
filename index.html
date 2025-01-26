@@ -1,20 +1,145 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
+    <title>Универсальный шифратор «Зеркальный квадрат»</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Фотогалерея</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            resize: vertical;
+        }
+        button {
+            padding: 12px 25px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .warning {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Кнопка-надпись -->
-    <div class="question-box" id="questionBox">
-        <h1 class="question-text">Показать фотки?</h1>
+    <div class="container">
+        <h1>🔐 Универсальный шифратор</h1>
+        <textarea id="input" placeholder="Введите текст на русском/английском/финском..."></textarea>
+        <div>
+            <button onclick="encrypt()">Зашифровать →</button>
+            <button onclick="clearText()">Очистить</button>
+        </div>
+        <textarea id="output" readonly placeholder="Результат..."></textarea>
+        <div class="warning" id="warning"></div>
     </div>
 
-    <!-- Контейнер для изображений -->
-    <div class="images-container" id="imagesContainer"></div>
+    <script>
+        // Полная таблица замены для всех языков
+        const substitutionTable = {
+            // Русский
+            'А': 'ÄR', 'Б': 'B%', 'В': 'V#', 'Г': 'G&', 'Д': 'DΔ', 
+            'Е': 'E€', 'Ё': 'YO', 'Ж': 'Ž', 'З': 'Z3', 'И': 'IΠ', 
+            'Й': 'JЙ', 'К': 'Kκ', 'Л': 'LΛ', 'М': 'Mμ', 'Н': 'HÑ', 
+            'О': 'OØ', 'П': 'PΠ', 'Р': 'R®', 'С': 'S$', 'Т': 'Tτ', 
+            'У': 'UÜ', 'Ф': 'FΦ', 'Х': 'XΧ', 'Ц': 'CЦ', 'Ч': 'Č', 
+            'Ш': 'Š', 'Щ': 'Ŝ', 'Ъ': 'Ъ', 'Ы': 'YI', 'Ь': 'Ь', 
+            'Э': 'EÄ', 'Ю': 'JU', 'Я': 'JA',
+            
+            // Английский
+            'A': 'AÅ', 'B': 'Bβ', 'C': 'C©', 'D': 'DÐ', 'E': 'EÆ', 
+            'F': 'Fƒ', 'G': 'GΓ', 'H': 'HΨ', 'I': 'IÍ', 'J': 'JĴ', 
+            'K': 'K₭', 'L': 'LŁ', 'M': 'MΜ', 'N': 'NÑ', 'O': 'OÖ', 
+            'P': 'PÞ', 'Q': 'QΩ', 'R': 'RΡ', 'S': 'Sß', 'T': 'TŦ', 
+            'U': 'UÛ', 'V': 'VѶ', 'W': 'WŴ', 'X': 'XΞ', 'Y': 'YŸ', 
+            'Z': 'ZŽ',
+            
+            // Финский
+            'Ä': 'ÄÄ', 'Ö': 'ÖÖ', 'Å': 'ÅÅ',
+            
+            // Спецсимволы
+            ' ': '§', '?': '¿', '!': '¡', ',': '‚', '.': '•',
+            '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅',
+            '6': '₆', '7': '₇', '8': '₈', '9': '₉', '0': '₀'
+        };
 
-    <script src="script.js"></script>
+        // Автоматическое создание обратной таблицы для предупреждений
+        const reverseTable = {};
+        Object.entries(substitutionTable).forEach(([key, value]) => {
+            reverseTable[value] = key;
+        });
+
+        function substitute(text) {
+            return text.toUpperCase().split('').map(char => {
+                const replaced = substitutionTable[char] || char;
+                // Проверка на уникальность кодов
+                if (!reverseTable[replaced] && replaced !== char) {
+                    document.getElementById('warning').innerText = 
+                        `⚠️ Символ '${char}' зашифрован не уникально!`;
+                }
+                return replaced;
+            }).join('');
+        }
+
+        function mirror(text) {
+            const chunkSize = 2;
+            const chunks = [];
+            for (let i = 0; i < text.length; i += chunkSize) {
+                let chunk = text.slice(i, i + chunkSize);
+                // Добавляем padding если необходимо
+                if (chunk.length < chunkSize) chunk += ' ';
+                chunks.push(chunk);
+            }
+            return chunks.reverse().join('');
+        }
+
+        function addAsciiShift(text) {
+            return text.split('').map((char, index) => {
+                const shift = (index % 3 + 1) * 2; // Динамический сдвиг: 2,4,6
+                return char + (char.charCodeAt(0) * shift).toString(16);
+            }).join(':');
+        }
+
+        function encrypt() {
+            document.getElementById('warning').innerText = '';
+            const input = document.getElementById('input').value;
+            
+            let result = substitute(input);
+            result = mirror(result);
+            result = addAsciiShift(result);
+            
+            document.getElementById('output').value = result;
+        }
+
+        function clearText() {
+            document.getElementById('input').value = '';
+            document.getElementById('output').value = '';
+            document.getElementById('warning').innerText = '';
+        }
+    </script>
 </body>
 </html>
