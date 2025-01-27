@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Room Game</title>
+    <title>Fixed Room Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         * {
@@ -49,7 +49,7 @@
         // Персонаж
         const character = {
             img: new Image(),
-            x: BORDER_SIZE + (ROOM_SIZE - 64)/2, // Стартовая позиция по центру комнаты
+            x: BORDER_SIZE + (ROOM_SIZE - 64)/2,
             y: BORDER_SIZE + (ROOM_SIZE - 64)/2,
             targetX: 0,
             targetY: 0,
@@ -68,12 +68,10 @@
             canvas.style.height = TOTAL_SIZE + 'px';
             ctx.scale(dpr, dpr);
             
-            // Инициализация целей
             character.targetX = character.x;
             character.targetY = character.y;
         }
 
-        // Ограничение движения в пределах комнаты
         function clamp(value, min, max) {
             return Math.min(Math.max(value, min), max);
         }
@@ -85,7 +83,7 @@
             character.x += dx * character.speed;
             character.y += dy * character.speed;
             
-            // Границы комнаты
+            // Границы с учетом размеров персонажа
             const minX = BORDER_SIZE;
             const maxX = BORDER_SIZE + ROOM_SIZE - character.width;
             const minY = BORDER_SIZE;
@@ -96,11 +94,9 @@
         }
 
         function drawRoom() {
-            // Черная рамка
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, TOTAL_SIZE, TOTAL_SIZE);
             
-            // Белая внутренняя часть
             ctx.fillStyle = '#FFF';
             ctx.fillRect(
                 BORDER_SIZE, 
@@ -134,13 +130,18 @@
 
         function handleInput(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
-            const scaleX = TOTAL_SIZE / canvas.width;
-            const scaleY = TOTAL_SIZE / canvas.height;
+            const scaleX = canvas.width / canvas.offsetWidth;
+            const scaleY = canvas.height / canvas.offsetHeight;
             
+            // Корректный расчет позиции с учетом масштабирования
             let targetX = (clientX - rect.left) * scaleX - character.width/2;
             let targetY = (clientY - rect.top) * scaleY - character.height/2;
             
-            // Ограничение целей внутри комнаты
+            // Конвертация в координаты комнаты
+            targetX = targetX / (canvas.width / TOTAL_SIZE);
+            targetY = targetY / (canvas.height / TOTAL_SIZE);
+
+            // Ограничение целей
             const maxTargetX = BORDER_SIZE + ROOM_SIZE - character.width;
             const maxTargetY = BORDER_SIZE + ROOM_SIZE - character.height;
             
@@ -153,7 +154,6 @@
             setupCanvas();
             gameLoop();
             
-            // Обработчики событий
             canvas.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 handleInput(e.touches[0].clientX, e.touches[0].clientY);
@@ -164,13 +164,11 @@
                 handleInput(e.touches[0].clientX, e.touches[0].clientY);
             });
 
-            // Для ПК
             canvas.addEventListener('click', (e) => {
                 handleInput(e.clientX, e.clientY);
             });
         });
 
-        // Ресайз окна
         window.addEventListener('resize', () => {
             setupCanvas();
         });
