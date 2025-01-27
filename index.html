@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Fixed Room Game</title>
+    <title>Gravity Room</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         * {
@@ -46,16 +46,23 @@
         const BORDER_SIZE = 15;
         const TOTAL_SIZE = ROOM_SIZE + BORDER_SIZE * 2;
         
+        // Физические константы
+        const GRAVITY = 0.8;
+        const JUMP_FORCE = -15;
+        const MOVE_SPEED = 0.2;
+        const GROUND_Y = BORDER_SIZE + ROOM_SIZE - 64; // Пол комнаты
+        
         // Персонаж
         const character = {
             img: new Image(),
             x: BORDER_SIZE + (ROOM_SIZE - 64)/2,
-            y: BORDER_SIZE + (ROOM_SIZE - 64)/2,
-            targetX: 0,
-            targetY: 0,
-            speed: 0.1,
+            y: GROUND_Y, // Начальная позиция на полу
+            velocityX: 0,
+            velocityY: 0,
             width: 64,
-            height: 64
+            height: 64,
+            isOnGround: true,
+            isMoving: false
         };
         character.img.src = 'Kop.png';
 
@@ -67,30 +74,35 @@
             canvas.style.width = TOTAL_SIZE + 'px';
             canvas.style.height = TOTAL_SIZE + 'px';
             ctx.scale(dpr, dpr);
-            
-            character.targetX = character.x;
-            character.targetY = character.y;
         }
 
         function clamp(value, min, max) {
             return Math.min(Math.max(value, min), max);
         }
 
-        function updatePosition() {
-            const dx = character.targetX - character.x;
-            const dy = character.targetY - character.y;
+        function updatePhysics() {
+            // Гравитация
+            if(!character.isOnGround) {
+                character.velocityY += GRAVITY;
+            }
             
-            character.x += dx * character.speed;
-            character.y += dy * character.speed;
+            // Движение по X
+            character.x += character.velocityX;
             
-            // Границы с учетом размеров персонажа
+            // Движение по Y
+            character.y += character.velocityY;
+            
+            // Проверка коллизии с полом
+            if(character.y >= GROUND_Y) {
+                character.y = GROUND_Y;
+                character.velocityY = 0;
+                character.isOnGround = true;
+            }
+            
+            // Границы комнаты по X
             const minX = BORDER_SIZE;
             const maxX = BORDER_SIZE + ROOM_SIZE - character.width;
-            const minY = BORDER_SIZE;
-            const maxY = BORDER_SIZE + ROOM_SIZE - character.height;
-            
             character.x = clamp(character.x, minX, maxX);
-            character.y = clamp(character.y, minY, maxY);
         }
 
         function drawRoom() {
@@ -123,17 +135,16 @@
         }
 
         function gameLoop() {
-            updatePosition();
+            updatePhysics();
             draw();
             requestAnimationFrame(gameLoop);
         }
 
-        function handleInput(clientX, clientY) {
+        function handleInputStart(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / canvas.offsetWidth;
             const scaleY = canvas.height / canvas.offsetHeight;
             
-            // Корректный расчет позиции с учетом масштабирования
             let targetX = (clientX - rect.left) * scaleX - character.width/2;
             let targetY = (clientY - rect.top) * scaleY - character.height/2;
             
@@ -141,12 +152,22 @@
             targetX = targetX / (canvas.width / TOTAL_SIZE);
             targetY = targetY / (canvas.height / TOTAL_SIZE);
 
-            // Ограничение целей
-            const maxTargetX = BORDER_SIZE + ROOM_SIZE - character.width;
-            const maxTargetY = BORDER_SIZE + ROOM_SIZE - character.height;
+            // Вычисление направления
+            const dx = targetX - character.x;
+            const dy = targetY - character.y;
+            const distance = Math.sqrt(dx*dx + dy*dy);
             
-            character.targetX = clamp(targetX, BORDER_SIZE, maxTargetX);
-            character.targetY = clamp(targetY, BORDER_SIZE, maxTargetY);
+            // Установка скорости
+            if(distance > 0) {
+                character.velocityX = (dx / distance) * MOVE_SPEED * distance;
+                character.velocityY = (dy / distance) * MOVE_SPEED * distance;
+                character.isOnGround = false;
+            }
+        }
+
+        function handleInputEnd() {
+            // Оставить только гравитацию при отпускании
+            character.velocityX = 0;
         }
 
         // Инициализация
@@ -154,24 +175,28 @@
             setupCanvas();
             gameLoop();
             
+            // Touch события
             canvas.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                handleInput(e.touches[0].clientX, e.touches[0].clientY);
+                handleInputStart(e.touches[0].clientX, e.touches[0].clientY);
             });
             
-            canvas.addEventListener('touchmove', (e) => {
+            canvas.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                handleInput(e.touches[0].clientX, e.touches[0].clientY);
+                handleInputEnd();
             });
 
-            canvas.addEventListener('click', (e) => {
-                handleInput(e.clientX, e.clientY);
+            // Mouse события
+            canvas.addEventListener('mousedown', (e) => {
+                handleInputStart(e.clientX, e.clientY);
+            });
+            
+            canvas.addEventListener('mouseup', (e) => {
+                handleInputEnd();
             });
         });
 
-        window.addEventListener('resize', () => {
-            setupCanvas();
-        });
+        window.addEventListener('resize', setupCanvas);
     </script>
 </body>
 </html>
