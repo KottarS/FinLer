@@ -1,202 +1,229 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Gravity Room</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Box Rain Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.18.0/matter.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         body {
-            background: #808080;
+            margin: 0;
             overflow: hidden;
-            touch-action: none;
+            cursor: crosshair;
+        }
+        #game-container {
+            position: relative;
             width: 100vw;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
-
-        #gameCanvas {
-            position: relative;
+        #background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
         }
-        
-        canvas {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            user-select: none;
+        #game-canvas {
+            position: absolute;
+            z-index: 2;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
+    <div id="game-container">
+        <img id="background" src="wall1.jpg" alt="Background">
+        <canvas id="game-canvas"></canvas>
+    </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const Engine = Matter.Engine,
+              Render = Matter.Render,
+              World = Matter.World,
+              Bodies = Matter.Bodies,
+              Body = Matter.Body,
+              Events = Matter.Events;
+
+        const engine = Engine.create();
+        engine.world.gravity.y = 1;
         
-        // Конфигурация комнаты
-        const ROOM_SIZE = 350;
-        const BORDER_SIZE = 15;
-        const TOTAL_SIZE = ROOM_SIZE + BORDER_SIZE * 2;
-        
-        // Физические константы
-        const GRAVITY = 0.8;
-        const JUMP_FORCE = -15;
-        const MOVE_SPEED = 0.2;
-        const GROUND_Y = BORDER_SIZE + ROOM_SIZE - 64; // Пол комнаты
-        
-        // Персонаж
-        const character = {
-            img: new Image(),
-            x: BORDER_SIZE + (ROOM_SIZE - 64)/2,
-            y: GROUND_Y, // Начальная позиция на полу
-            velocityX: 0,
-            velocityY: 0,
-            width: 64,
-            height: 64,
-            isOnGround: true,
-            isMoving: false
+        const render = Render.create({
+            element: document.getElementById('game-container'),
+            engine: engine,
+            canvas: document.getElementById('game-canvas'),
+            options: {
+                width: 1920,
+                height: 1080,
+                wireframes: false,
+                background: 'transparent'
+            }
+        });
+
+        // Конфигурация
+        const config = {
+            platform: {
+                width: 1337,
+                height: 216,
+                y: 1080 - 216
+            },
+            box: {
+                size: 117,
+                spawnY: -50,
+                physics: {
+                    density: 0.8,
+                    restitution: 0.3
+                }
+            },
+            character: {
+                width: 75,
+                height: 103,
+                jumpForce: -15,
+                speed: 8,
+                friction: 0.05
+            }
         };
-        character.img.src = 'Kop.png';
 
-        // Настройка Canvas
-        function setupCanvas() {
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = TOTAL_SIZE * dpr;
-            canvas.height = TOTAL_SIZE * dpr;
-            canvas.style.width = TOTAL_SIZE + 'px';
-            canvas.style.height = TOTAL_SIZE + 'px';
-            ctx.scale(dpr, dpr);
-        }
-
-        function clamp(value, min, max) {
-            return Math.min(Math.max(value, min), max);
-        }
-
-        function updatePhysics() {
-            // Гравитация
-            if(!character.isOnGround) {
-                character.velocityY += GRAVITY;
+        // Создание платформ
+        const createPlatform = (x) => Bodies.rectangle(
+            x,
+            config.platform.y - config.platform.height/2,
+            config.platform.width,
+            config.platform.height,
+            {
+                isStatic: true,
+                render: { sprite: { texture: 'R1.jpg' } }
             }
-            
-            // Движение по X
-            character.x += character.velocityX;
-            
-            // Движение по Y
-            character.y += character.velocityY;
-            
-            // Проверка коллизии с полом
-            if(character.y >= GROUND_Y) {
-                character.y = GROUND_Y;
-                character.velocityY = 0;
-                character.isOnGround = true;
-            }
-            
-            // Границы комнаты по X
-            const minX = BORDER_SIZE;
-            const maxX = BORDER_SIZE + ROOM_SIZE - character.width;
-            character.x = clamp(character.x, minX, maxX);
-        }
+        );
 
-        function drawRoom() {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, TOTAL_SIZE, TOTAL_SIZE);
-            
-            ctx.fillStyle = '#FFF';
-            ctx.fillRect(
-                BORDER_SIZE, 
-                BORDER_SIZE, 
-                ROOM_SIZE, 
-                ROOM_SIZE
+        const platforms = [
+            createPlatform(1920/2 - 1337),
+            createPlatform(1920/2),
+            createPlatform(1920/2 + 1337)
+        ];
+
+        // Персонаж
+        const character = Bodies.rectangle(
+            1920/2,
+            config.platform.y - config.platform.height - config.character.height/2,
+            config.character.width,
+            config.character.height,
+            {
+                chamfer: { radius: 10 },
+                friction: config.character.friction,
+                inertia: Infinity,
+                render: {
+                    sprite: {
+                        texture: 'ManX.png',
+                        xScale: 0.5,
+                        yScale: 0.5
+                    }
+                }
+            }
+        );
+
+        // Границы мира
+        const boundaries = [
+            Bodies.rectangle(-50, 540, 100, 1080, { isStatic: true, render: { visible: false } }),
+            Bodies.rectangle(1970, 540, 100, 1080, { isStatic: true, render: { visible: false } })
+        ];
+
+        World.add(engine.world, [...platforms, character, ...boundaries]);
+
+        // Создание боксов
+        document.addEventListener('click', (e) => {
+            const rect = render.canvas.getBoundingClientRect();
+            const scaleX = 1920 / rect.width;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+
+            const box = Bodies.rectangle(
+                mouseX,
+                config.box.spawnY,
+                config.box.size,
+                config.box.size,
+                {
+                    ...config.box.physics,
+                    render: {
+                        sprite: {
+                            texture: 'boxX.png',
+                            xScale: 1,
+                            yScale: 1
+                        }
+                    }
+                }
             );
-        }
 
-        function drawCharacter() {
-            ctx.drawImage(
-                character.img,
-                character.x,
-                character.y,
-                character.width,
-                character.height
-            );
-        }
+            World.add(engine.world, box);
+        });
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawRoom();
-            drawCharacter();
-        }
+        // Управление
+        const keys = { left: false, right: false, up: false };
+        let canJump = false;
 
-        function gameLoop() {
-            updatePhysics();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        function handleInputStart(clientX, clientY) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / canvas.offsetWidth;
-            const scaleY = canvas.height / canvas.offsetHeight;
-            
-            let targetX = (clientX - rect.left) * scaleX - character.width/2;
-            let targetY = (clientY - rect.top) * scaleY - character.height/2;
-            
-            // Конвертация в координаты комнаты
-            targetX = targetX / (canvas.width / TOTAL_SIZE);
-            targetY = targetY / (canvas.height / TOTAL_SIZE);
-
-            // Вычисление направления
-            const dx = targetX - character.x;
-            const dy = targetY - character.y;
-            const distance = Math.sqrt(dx*dx + dy*dy);
-            
-            // Установка скорости
-            if(distance > 0) {
-                character.velocityX = (dx / distance) * MOVE_SPEED * distance;
-                character.velocityY = (dy / distance) * MOVE_SPEED * distance;
-                character.isOnGround = false;
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': keys.left = true; break;
+                case 'ArrowRight': keys.right = true; break;
+                case 'ArrowUp': keys.up = true; break;
             }
-        }
+        });
 
-        function handleInputEnd() {
-            // Оставить только гравитацию при отпускании
-            character.velocityX = 0;
-        }
+        document.addEventListener('keyup', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': keys.left = false; break;
+                case 'ArrowRight': keys.right = false; break;
+                case 'ArrowUp': keys.up = false; break;
+            }
+        });
 
-        // Инициализация
-        window.addEventListener('load', () => {
-            setupCanvas();
-            gameLoop();
+        // Игровой цикл
+        Events.on(engine, 'beforeUpdate', () => {
+            // Движение
+            let velocityX = 0;
+            if(keys.left) velocityX = -config.character.speed;
+            if(keys.right) velocityX = config.character.speed;
             
-            // Touch события
-            canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                handleInputStart(e.touches[0].clientX, e.touches[0].clientY);
-            });
-            
-            canvas.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                handleInputEnd();
+            Body.setVelocity(character, {
+                x: velocityX,
+                y: character.velocity.y
             });
 
-            // Mouse события
-            canvas.addEventListener('mousedown', (e) => {
-                handleInputStart(e.clientX, e.clientY);
-            });
-            
-            canvas.addEventListener('mouseup', (e) => {
-                handleInputEnd();
+            // Прыжок
+            if(keys.up && canJump) {
+                Body.setVelocity(character, {
+                    x: character.velocity.x,
+                    y: config.character.jumpForce
+                });
+                canJump = false;
+            }
+
+            Body.setAngle(character, 0);
+        });
+
+        // Обработка коллизий
+        Events.on(engine, 'collisionActive', (event) => {
+            event.pairs.forEach(pair => {
+                const bodies = [pair.bodyA, pair.bodyB];
+                const characterBody = bodies.find(b => b === character);
+                const otherBody = bodies.find(b => b !== character);
+
+                if(characterBody) {
+                    // Проверка что персонаж стоит на поверхности
+                    const yDiff = character.position.y - otherBody.position.y;
+                    if(yDiff < -config.character.height/2) {
+                        canJump = true;
+                    }
+                }
             });
         });
 
-        window.addEventListener('resize', setupCanvas);
+        // Запуск
+        Engine.run(engine);
+        Render.run(render);
+
+        // Масштабирование
+        const resize = () => {
+            const scale = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+            render.canvas.style.transform = `scale(${scale})`;
+        };
+        window.addEventListener('resize', resize);
+        resize();
     </script>
 </body>
 </html>
