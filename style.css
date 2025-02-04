@@ -1,0 +1,11 @@
+/* Общие стили */
+body {
+    margin: 0;
+    overflow: hidden; /* Отключаем прокрутку */
+}
+
+/* Стили для canvas */
+canvas {
+    display: block;
+    background-color: #f0f0f0; /* Цвет фона */
+}
