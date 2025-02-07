@@ -1,13 +1,217 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Финский язык: Тренажер перевода</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      color: #555;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    input[type="text"]:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .correct {
+      color: green;
+    }
+    .incorrect {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Переводчик слов</h1>
+    <p>Напишите перевод слова:</p>
+    <p id="wordToTranslate"></p>
+    <input type="text" id="userInput" placeholder="Ваш перевод..." />
+    <button onclick="checkAnswer()">Проверить</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const vocabulary = [
+      { finnish: "Leipuri", russian: "пекарь" },
+      { finnish: "Kondiittori", russian: "кондитер" },
+      { finnish: "Ammattikorkeakoulu", russian: "колледж" },
+      { finnish: "Koulutus", russian: "образование" },
+      { finnish: "Opiskelu", russian: "учеба" },
+      { finnish: "Harjoittelu", russian: "практика" },
+      { finnish: "Tutkinto", russian: "диплом" },
+      { finnish: "Kurssit", russian: "курсы" },
+      { finnish: "Taidot", russian: "навыки" },
+      { finnish: "Pätevyys", russian: "квалификация" },
+      { finnish: "Työkokemus", russian: "опыт работы" },
+      { finnish: "Leipomo", russian: "пекарня" },
+      { finnish: "Työskentely", russian: "работа" },
+      { finnish: "Vastuut", russian: "обязанности" },
+      { finnish: "Vuorotyö", russian: "сменная работа" },
+      { finnish: "Aikataulu", russian: "график" },
+      { finnish: "Tiimityö", russian: "командная работа" },
+      { finnish: "Asiakaspalvelu", russian: "обслуживание клиентов" },
+      { finnish: "Laatuvalvonta", russian: "контроль качества" },
+      { finnish: "Turvallisuus", russian: "безопасность" },
+      { finnish: "Taikina", russian: "тесто" },
+      { finnish: "Leivonta", russian: "выпечка" },
+      { finnish: "Koristelu", russian: "декорирование" },
+      { finnish: "Paistaminen", russian: "выпекание" },
+      { finnish: "Jäähdytys", russian: "охлаждение" },
+      { finnish: "Pakastaminen", russian: "заморозка" },
+      { finnish: "Fermentointi", russian: "ферментация" },
+      { finnish: "Täytteet", russian: "начинки" },
+      { finnish: "Glazeeraus", russian: "глазировка" },
+      { finnish: "Säilyvyys", russian: "срок годности" },
+      { finnish: "Uuni", russian: "печь" },
+      { finnish: "Sekoitin", russian: "миксер" },
+      { finnish: "Veitsi", russian: "нож" },
+      { finnish: "Leivinpaperi", russian: "пергамент" },
+      { finnish: "Jauho", russian: "мука" },
+      { finnish: "Sokeri", russian: "сахар" },
+      { finnish: "Voi", russian: "масло" },
+      { finnish: "Kananmuna", russian: "яйцо" },
+      { finnish: "Hiiva", russian: "дрожжи" },
+      { finnish: "Mausteet", russian: "специи" },
+      { finnish: "Leipä", russian: "хлеб" },
+      { finnish: "Pulla", russian: "булочка" },
+      { finnish: "Croissant", russian: "круассан" },
+      { finnish: "Donitsi", russian: "пончик" },
+      { finnish: "Kakku", russian: "торт" },
+      { finnish: "Muffinsi", russian: "маффин" },
+      { finnish: "Patonki", russian: "багет" },
+      { finnish: "Keksi", russian: "печенье" },
+      { finnish: "Piirakka", russian: "пирог" },
+      { finnish: "Täytekakku", russian: "слоеный торт" },
+      { finnish: "Luotettava", russian: "надежный" },
+      { finnish: "Tarkka", russian: "внимательный" },
+      { finnish: "Joustava", russian: "гибкий" },
+      { finnish: "Sinnikäs", russian: "упорный" },
+      { finnish: "Luova", russian: "креативный" },
+      { finnish: "Nopea", russian: "быстрый" },
+      { finnish: "Huolellinen", russian: "аккуратный" },
+      { finnish: "Positiivinen", russian: "позитивный" },
+      { finnish: "Motivoitunut", russian: "мотивированный" },
+      { finnish: "Intoilija", russian: "энтузиаст" },
+      { finnish: "Kahvi", russian: "кофе" },
+      { finnish: "Espresso", russian: "эспрессо" },
+      { finnish: "Cappuccino", russian: "капучино" },
+      { finnish: "Asiakkaat", russian: "клиенты" },
+      { finnish: "Myynti", russian: "продажи" },
+      { finnish: "Tilaukset", russian: "заказы" },
+      { finnish: "Tarjoilu", russian: "подача" },
+      { finnish: "Menu", russian: "меню" },
+      { finnish: "Hygienia", russian: "гигиена" },
+      { finnish: "Allergeenit", russian: "аллергены" },
+      { finnish: "Valmistaa", russian: "готовить" },
+      { finnish: "Parantaa", russian: "улучшать" },
+      { finnish: "Kehittää", russian: "развивать" },
+      { finnish: "Oppia", russian: "учиться" },
+      { finnish: "Sopeutua", russian: "адаптироваться" },
+      { finnish: "Organisoida", russian: "организовывать" },
+      { finnish: "Tarkistaa", russian: "проверять" },
+      { finnish: "Ehdottaa", russian: "предлагать" },
+      { finnish: "Korjata", russian: "исправлять" },
+      { finnish: "Innovoida", russian: "изобретать" },
+      { finnish: "Tuoreet aineet", russian: "свежие ингредиенты" },
+      { finnish: "Säännökset", russian: "правила" },
+      { finnish: "Ruokaturvallisuus", russian: "безопасность продуктов" },
+      { finnish: "Viiveet", russian: "задержки" },
+      { finnish: "Tehokkuus", russian: "эффективность" },
+      { finnish: "Ongelmanratkaisu", russian: "решение проблем" },
+      { finnish: "Yhteistyö", russian: "сотрудничество" },
+      { finnish: "Palautteet", russian: "отзывы" },
+      { finnish: "Haasteet", russian: "вызовы" },
+      { finnish: "Tavoitteet", russian: "цели" },
+      { finnish: "Helsinki", russian: "Хельсинки" },
+      { finnish: "Ilmala", russian: "Илмала" },
+      { finnish: "Nurmes", russian: "Нурмес" },
+      { finnish: "Muutto", russian: "переезд" },
+      { finnish: "Sopeutuminen", russian: "адаптация" },
+      { finnish: "Kiinnostus", russian: "интерес" },
+      { finnish: "Uudet haasteet", russian: "новые вызовы" },
+      { finnish: "Ammattimaisuus", russian: "профессионализм" },
+      { finnish: "Innovaatio", russian: "инновация" },
+      { finnish: "Yrityskulttuuri", russian: "корпоративная культура" }
+    ];
+
+    let currentWordIndex = Math.floor(Math.random() * vocabulary.length);
+
+    function showWord() {
+      document.getElementById("wordToTranslate").textContent = vocabulary[currentWordIndex].finnish;
+      document.getElementById("userInput").value = "";
+      document.getElementById("result").textContent = "";
+    }
+
+    function checkAnswer() {
+      const userInput = document.getElementById("userInput").value.toLowerCase();
+      const correctAnswer = vocabulary[currentWordIndex].russian.toLowerCase();
+
+      if (userInput === correctAnswer) {
+        document.getElementById("result").className = "result correct";
+        document.getElementById("result").textContent = "Правильно!";
+      } else {
+        document.getElementById("result").className = "result incorrect";
+        document.getElementById("result").textContent = `Неправильно! Правильный ответ: ${correctAnswer}`;
+      }
+
+      currentWordIndex = Math.floor(Math.random() * vocabulary.length);
+      setTimeout(showWord, 2000);
+    }
+
+    showWord();
+  </script>
+</body>
 </html>
