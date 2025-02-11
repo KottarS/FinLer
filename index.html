@@ -1,269 +1,347 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Финский язык: Тренажер перевода</title>
+  <title>Выживание в Ядерной Зиме – Полное Руководство</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
+    /* Сброс стилей, чтобы браузер не вел себя как ебанутый */
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    
+    header {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 2px solid #333;
+    }
+    
+    header h1 {
+      font-size: 3rem;
+      color: #ff6f61;
+      margin-bottom: 10px;
+    }
+    
+    header p {
+      font-size: 1.2rem;
+      color: #ccc;
+    }
+    
+    nav {
+      margin-top: 15px;
+    }
+    
+    nav ul {
+      list-style: none;
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
+      gap: 15px;
+      flex-wrap: wrap;
     }
-    .container {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 500px;
-      text-align: center;
-      transition: transform 0.3s ease;
+    
+    nav ul li a {
+      color: #e0e0e0;
+      text-decoration: none;
+      padding: 5px 10px;
+      border: 1px solid transparent;
+      transition: border 0.3s, background 0.3s;
     }
-    .container:hover {
-      transform: scale(1.02);
+    
+    nav ul li a:hover {
+      border: 1px solid #ff6f61;
+      background: rgba(255, 111, 97, 0.2);
     }
-    h1 {
-      color: #333;
-      font-size: 2rem;
-      margin-bottom: 1rem;
+    
+    main {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 0 20px;
     }
-    p {
-      color: #555;
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
+    
+    section {
+      margin-bottom: 60px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
     }
-    input[type="text"] {
-      width: 100%;
-      padding: 0.75rem;
+    
+    section h2 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: #ff6f61;
+    }
+    
+    section p {
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+    }
+    
+    .tip {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+    
+    .tip h3 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      color: #ff9f43;
+    }
+    
+    .tip ul {
+      list-style: disc inside;
+      margin-left: 20px;
+    }
+    
+    .tip ul li {
+      margin-bottom: 8px;
       font-size: 1rem;
-      border: 2px solid #ddd;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
-    input[type="text"]:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
-      outline: none;
+    
+    .interactive {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 30px 0;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     }
-    button {
-      background: linear-gradient(90deg, #007bff, #0056b3);
-      color: white;
+    
+    .interactive button {
+      background: #ff6f61;
       border: none;
-      padding: 0.75rem 1.5rem;
+      padding: 12px 20px;
       font-size: 1rem;
-      border-radius: 10px;
+      color: #fff;
+      border-radius: 5px;
       cursor: pointer;
-      transition: background 0.3s ease, transform 0.3s ease;
+      transition: background 0.3s, transform 0.3s;
     }
-    button:hover {
-      background: linear-gradient(90deg, #0056b3, #003d80);
-      transform: translateY(-2px);
+    
+    .interactive button:hover {
+      background: #ff8f81;
+      transform: scale(1.05);
     }
-    .result {
-      margin-top: 1rem;
+    
+    #random-tip {
+      margin-top: 15px;
       font-size: 1.2rem;
-      font-weight: bold;
+      color: #ffeb3b;
     }
-    .correct {
-      color: #28a745;
+    
+    footer {
+      text-align: center;
+      padding: 20px 0;
+      border-top: 2px solid #333;
+      font-size: 0.9rem;
+      color: #888;
     }
-    .incorrect {
-      color: #dc3545;
+    
+    /* Кнопка "Наверх" */
+    #back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #ff6f61;
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+      opacity: 0.8;
+      transition: opacity 0.3s, transform 0.3s;
+      display: none;
+      z-index: 100;
     }
-    @media (max-width: 600px) {
-      .container {
-        padding: 1.5rem;
-      }
-      h1 {
-        font-size: 1.75rem;
-      }
-      p {
-        font-size: 1rem;
-      }
-      input[type="text"], button {
-        font-size: 0.9rem;
-      }
+    
+    #back-to-top:hover {
+      opacity: 1;
+      transform: scale(1.05);
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Переводчик слов</h1>
-    <p>Напишите перевод слова:</p>
-    <p id="wordToTranslate"></p>
-    <input type="text" id="userInput" placeholder="Ваш перевод..." />
-    <button onclick="checkAnswer()">Проверить</button>
-    <div class="result" id="result"></div>
-  </div>
+  <header>
+    <h1>Выживание в Ядерной Зиме</h1>
+    <p>Полное руководство по выживанию в постапокалиптическом аду. Если мир пошел нахуй – ты не сдохнешь первым!</p>
+    <nav>
+      <ul>
+        <li><a href="#introduction">Вступление</a></li>
+        <li><a href="#planning">Планирование</a></li>
+        <li><a href="#tips">Советы</a></li>
+        <li><a href="#interactive">Советчик</a></li>
+        <li><a href="#additional">Дополнительно</a></li>
+        <li><a href="#conclusion">Заключение</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Вступление -->
+    <section id="introduction">
+      <h2>Вступление</h2>
+      <p>
+        Привет, дружище! Если ты здесь, значит, ты осознаешь, что в мире может наступить настоящий апокалипсис. Ядерная зима – это не шутка, и если мир окончательно пошел нахуй, тебе придется приложить максимум усилий, чтобы выжить. Здесь мы собрали максимальный объем информации, охуенно полезных советов и жёстких рассуждений, чтобы ты не оказался на светящейся хуйней.
+      </p>
+    </section>
+
+    <!-- Планирование и подготовка -->
+    <section id="planning">
+      <h2>Планирование и Подготовка</h2>
+      <p>
+        Подготовка – это не просто запас консервы, а целая философия выживания в экстремальных условиях. Сначала, если ты еще не готовился, срочно найди убежище: подземные бункеры, шахты или старые советские здания – всё, что способно защитить тебя от радиации и ледяного холода.
+      </p>
+      <div class="tip">
+        <h3>Подготовься заранее!</h3>
+        <ul>
+          <li>Запасайся консервами, сухпайками и сублиматами – чтобы не остаться голодным мудаком.</li>
+          <li>Найди или оборудуй подземный бункер, который выдержит даже самый жёсткий ядерный удар.</li>
+          <li>Подготовь фильтры для воды, противогазы и аптечку – каждая мелочь может спасти тебе жизнь.</li>
+          <li>Учись обращаться с оружием – без этого тебе точно не обойтись в постапокалиптическом мире.</li>
+        </ul>
+      </div>
+      <p>
+        Не жди, пока всё пойдет по пизде – начинай подготовку уже сегодня и будь готов к худшему!
+      </p>
+    </section>
+
+    <!-- Советы по выживанию -->
+    <section id="tips">
+      <h2>Советы по Выживанию</h2>
+      <div class="tip">
+        <h3>1. Обустройство убежища</h3>
+        <ul>
+          <li><strong>Подземные бункеры:</strong> Идеальное укрытие от радиации и экстремальных температур.</li>
+          <li><strong>Метро и шахты:</strong> Глубокие подземелья способны защитить тебя от внешних угроз.</li>
+          <li><strong>Толстостенные здания:</strong> Надёжное временное убежище, если другие варианты недоступны.</li>
+        </ul>
+      </div>
+      <div class="tip">
+        <h3>2. Продовольствие</h3>
+        <ul>
+          <li><strong>Консервы и сухпайки:</strong> Запасай всё, что может храниться годами – не оставляй шансов голоду.</li>
+          <li><strong>Выращивание еды:</strong> Организуй подземные фермы для грибов, водорослей и даже мутировавших растений.</li>
+          <li><strong>Охота и ловушки:</strong> Мыши, крысы и дикая дичь – если природа не отвалилась полностью, всё это пригодится.</li>
+        </ul>
+      </div>
+      <div class="tip">
+        <h3>3. Вода и Гигиена</h3>
+        <ul>
+          <li><strong>Фильтрация и кипячение:</strong> Обязательно очищай любую найденную воду – радиация не шутит, блять!</li>
+          <li><strong>Сбор влаги:</strong> Используй гигроскопичные материалы для сбора конденсата из воздуха.</li>
+          <li><strong>Гигиена:</strong> Даже в апокалипсисе чистота спасает – инфекции могут убить так же быстро, как и радиация.</li>
+        </ul>
+      </div>
+      <div class="tip">
+        <h3>4. Защита и Оборона</h3>
+        <ul>
+          <li><strong>Оружие:</strong> Огнестрел, холодное оружие или самодельные ловушки – все для защиты твоей жопы от мародёров.</li>
+          <li><strong>Защита убежища:</strong> Укрепляй стены, устанавливай системы сигнализации и готовься к нападениям.</li>
+          <li><strong>Тактические решения:</strong> Иногда лучше отступить, чем ввязываться в бессмысленный конфликт – оцени ситуацию и действуй с умом.</li>
+        </ul>
+      </div>
+      <div class="tip">
+        <h3>5. Радиация</h3>
+        <ul>
+          <li><strong>Герметичные помещения:</strong> Чем меньше радиация попадет внутрь, тем дольше прослужит твоя защита.</li>
+          <li><strong>Противогаз и йод:</strong> Защити щитовидку – это критически важная мера в борьбе с радиацией.</li>
+          <li><strong>Измерительные приборы:</strong> Регулярно проверяй уровень радиации, чтобы не оказаться в светящейся хуйней.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Интерактивный советчик -->
+    <section id="interactive">
+      <h2>Интерактивный Советчик</h2>
+      <div class="interactive">
+        <p>Нажми на кнопку, чтобы получить случайный охуенный совет для выживания в ядерной зиме!</p>
+        <button id="generate-tip">Дай совет</button>
+        <div id="random-tip"></div>
+      </div>
+      <p>
+        Этот советчик подзарядит тебя мотивацией и напомнит, что даже в самом жёстком апокалипсисе можно найти причину для борьбы.
+      </p>
+    </section>
+
+    <!-- Дополнительные материалы и рассуждения -->
+    <section id="additional">
+      <h2>Дополнительные Материалы и Рассуждения</h2>
+      <p>
+        Здесь ты найдешь не только практические советы, но и глубокие размышления о том, как можно выжить в условиях полного хаоса. Выживание – это не только физическая борьба, но и интеллектуальная, моральная и психологическая одиссея.
+      </p>
+      <p>
+        Представь, что каждое твое решение – это выбор между жизнью и смертью. Каждая мелочь, от правильного подбора одежды до установки ловушек, может сыграть решающую роль, когда мир вокруг превратится в ледяной, радиационный ад.
+      </p>
+      <p>
+        <strong>Интересный факт:</strong> Многие учёные до сих пор спорят о том, сможет ли человечество пережить ядерную зиму. Но если мы соберем все свои знания, смекалку и боевой настрой, мы точно не окажемся на светящейся хуйней.
+      </p>
+      <p>
+        Изучай, экспериментируй и всегда будь готов к худшему – только так можно победить апокалипсис. Помни: даже если весь мир идет нахуй, твоя жизнь в твоих руках.
+      </p>
+    </section>
+
+    <!-- Заключение -->
+    <section id="conclusion">
+      <h2>Заключение</h2>
+      <p>
+        Выживание в ядерной зиме – это марафон, а не спринт. Здесь собраны советы и размышления, от которых твоя жизнь зависит. Смекалка, подготовка и правильное снаряжение – твои лучшие союзники в этом постапокалиптическом аду.
+      </p>
+      <p>
+        Если все пойдет по пизде, найди хорошую компанию, налей последнюю бутылку водки и встреть апокалипсис с достоинством и охуительным настроем!
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Постапокалиптический Выживальщик. Все права защищены.</p>
+  </footer>
+
+  <button id="back-to-top">Наверх</button>
 
   <script>
-    const vocabulary = [
-      { finnish: "Leipuri", russian: "пекарь" },
-      { finnish: "Kondiittori", russian: "кондитер" },
-      { finnish: "Ammattikorkeakoulu", russian: "колледж" },
-      { finnish: "Koulutus", russian: "образование" },
-      { finnish: "Opiskelu", russian: "учеба" },
-      { finnish: "Harjoittelu", russian: "практика" },
-      { finnish: "Tutkinto", russian: "диплом" },
-      { finnish: "Kurssit", russian: "курсы" },
-      { finnish: "Taidot", russian: "навыки" },
-      { finnish: "Pätevyys", russian: "квалификация" },
-      { finnish: "Työkokemus", russian: "опыт работы" },
-      { finnish: "Leipomo", russian: "пекарня" },
-      { finnish: "Hapattaminen", russian: "брожение" },
-      { finnish: "Kuorrutus", russian: "глазурь/корочка" },
-      { finnish: "Leivontamenetelmät", russian: "методы выпечки" },
-      { finnish: "Täsmällisyys", russian: "точность" },
-      { finnish: "Lämpötilan säätö", russian: "регулировка температуры" },
-      { finnish: "Hajoavuus", russian: "рассыпчатость" },
-      { finnish: "Taikinan käsittely", russian: "обработка теста" },
-      { finnish: "Viilentäminen", russian: "охлаждение" },
-      { finnish: "Kuivauksen ajoitus", russian: "время сушки" },
-      { finnish: "Leivonnän rakenne", russian: "структура выпечки" },
-      { finnish: "Taikinaveitsi", russian: "тесторезка" },
-      { finnish: "Leikkuupuikko", russian: "скалка" },
-      { finnish: "Muottien käyttö", russian: "использование форм" },
-      { finnish: "Vaaka", russian: "весы" },
-      { finnish: "Lämpömittari", russian: "термометр" },
-      { finnish: "Piipuri", russian: "кондитерский мешок" },
-      { finnish: "Silikonimuovit", russian: "силиконовые формы" },
-      { finnish: "Jääkaappi", russian: "холодильник" },
-      { finnish: "Höyryuuni", russian: "паровая печь" },
-      { finnish: "Säilytysastiat", russian: "контейнеры для хранения" },
-      { finnish: "Gluteeniton", russian: "безглютеновый" },
-      { finnish: "Laktoositon", russian: "безлактозный" },
-      { finnish: "Vehnäjauho", russian: "пшеничная мука" },
-      { finnish: "Ruisjauho", russian: "ржаная мука" },
-      { finnish: "Kookosrasva", russian: "кокосовое масло" },
-      { finnish: "Hunaja", russian: "мёд" },
-      { finnish: "Vaniljauute", russian: "ванильный экстракт" },
-      { finnish: "Pähkinät", russian: "орехи" },
-      { finnish: "Maapähkinä", russian: "арахис" },
-      { finnish: "Soijalesiitin", russian: "соевый лецитин" },
-      { finnish: "HACCP-järjestelmä", russian: "система HACCP" },
-      { finnish: "Hygieniapassi", russian: "гигиенический паспорт" },
-      { finnish: "Puhdistusaineet", russian: "чистящие средства" },
-      { finnish: "Desinfiointi", russian: "дезинфекция" },
-      { finnish: "Räätälöidyt ratkaisut", russian: "индивидуальные решения" },
-      { finnish: "Virheiden ennaltaehkäisy", russian: "предотвращение ошибок" },
-      { finnish: "Säännölliset tarkastukset", russian: "регулярные проверки" },
-      { finnish: "Kriittiset pisteet", russian: "критические точки контроля" },
-      { finnish: "Elintarvikekäytäntö", russian: "практика обращения с продуктами" },
-      { finnish: "Säilytysolosuhteet", russian: "условия хранения" },
-      { finnish: "Asiakaslähtöisyys", russian: "клиентоориентированность" },
-      { finnish: "Ystävällinen palvelu", russian: "дружелюбное обслуживание" },
-      { finnish: "Erityisruokavaliot", russian: "особые диеты" },
-      { finnish: "Asiakkaan toiveet", russian: "пожелания клиента" },
-      { finnish: "Reklamaatiot", russian: "жалобы" },
-      { finnish: "Nopea reagointi", russian: "быстрая реакция" },
-      { finnish: "Myyntipsykologia", russian: "психология продаж" },
-      { finnish: "Kärsivällisyys", russian: "терпение" },
-      { finnish: "Selkeä kommunikointi", russian: "четкая коммуникация" },
-      { finnish: "Positiivinen asenne", russian: "позитивный настрой" },
-      { finnish: "Työkaverit", russian: "коллеги" },
-      { finnish: "Jakaminen", russian: "распределение задач" },
-      { finnish: "Avun tarjoaminen", russian: "предложение помощи" },
-      { finnish: "Kokoukset", russian: "совещания" },
-      { finnish: "Palautteen antaminen", russian: "предоставление обратной связи" },
-      { finnish: "Yhteiset tavoitteet", russian: "общие цели" },
-      { finnish: "Roolijako", russian: "распределение ролей" },
-      { finnish: "Luottamus", russian: "доверие" },
-      { finnish: "Keskustelukulttuuri", russian: "культура обсуждений" },
-      { finnish: "Konfliktien ratkaisu", russian: "решение конфликтов" },
-      { finnish: "Järjestelmällisyys", russian: "организованность" },
-      { finnish: "Omistautuminen", russian: "преданность делу" },
-      { finnish: "Kestävä mielenlaatu", russian: "стрессоустойчивость" },
-      { finnish: "Itseohjautuvuus", russian: "самостоятельность" },
-      { finnish: "Oppimishalu", russian: "желание учиться" },
-      { finnish: "Kunnianhimoisuus", russian: "амбициозность" },
-      { finnish: "Rehellisyys", russian: "честность" },
-      { finnish: "Harkitsevaisuus", russian: "рассудительность" },
-      { finnish: "Yhteishenki", russian: "командный дух" },
-      { finnish: "Aloitteellisuus", russian: "инициативность" },
-      { finnish: "Kiireaikana", russian: "в часы пик" },
-      { finnish: "Varastointi", russian: "хранение запасов" },
-      { finnish: "Säännölliset tilaukset", russian: "регулярные заказы" },
-      { finnish: "Viikonlopputyö", russian: "работа в выходные" },
-      { finnish: "Ylityöt", russian: "сверхурочные" },
-      { finnish: "Tauot", russian: "перерывы" },
-      { finnish: "Työvaatteet", russian: "рабочая одежда" },
-      { finnish: "Työterveys", russian: "рабочее здоровье" },
-      { finnish: "Työrauha", russian: "рабочая атмосфера" },
-      { finnish: "Palkanmaksu", russian: "выплата зарплаты" },
-      { finnish: "Kahvipapujen jauhaminen", russian: "помол кофейных зерен" },
-      { finnish: "Latte Art", russian: "латте-арт" },
-      { finnish: "Suodatinkahvi", russian: "фильтр-кофе" },
-      { finnish: "Kylmäkahvi", russian: "холодный кофе" },
-      { finnish: "Espressokone", russian: "кофемашина" },
-      { finnish: "Maitovaahto", russian: "молочная пена" },
-      { finnish: "Kahvilaiterit", russian: "кофейные аксессуары" },
-      { finnish: "Säilytysastiat", russian: "контейнеры для хранения" },
-      { finnish: "Tuoreus", russian: "свежесть" },
-      { finnish: "Aromit", russian: "ароматы" },
-      { finnish: "Joulutorttu", russian: "рождественское пирожное" },
-      { finnish: "Laskiaispulla", russian: "масленичная булочка" },
-      { finnish: "Runebergintorttu", russian: "торт Рунеберга" },
-      { finnish: "Kesähedelmät", russian: "летние фрукты" },
-      { finnish: "Koristekakut", russian: "декоративные торты" },
-      { finnish: "Jääkahvi", russian: "кофе со льдом" },
-      { finnish: "Glögi", russian: "глёги, глинтвейн" },
-      { finnish: "Luomutuotteet", russian: "органические продукты" },
-      { finnish: "Paikalliset raaka-aineet", russian: "местные ингредиенты" },
-      { finnish: "Festivaalivalmistukset", russian: "праздничная выпечка" },
-      { finnish: "Suunnitella", russian: "планировать" },
-      { finnish: "Säästää", russian: "экономить ресурсы" },
-      { finnish: "Tehostaa", russian: "оптимизировать" },
-      { finnish: "Testata", russian: "тестировать" },
-      { finnish: "Varmistaa", russian: "убедиться" },
-      { finnish: "Säilyttää", russian: "сохранять" },
-      { finnish: "Noudattaa", russian: "следовать правилам" },
-      { finnish: "Kouluttaa", russian: "обучать" },
-      { finnish: "Kehittyä", russian: "развиваться" },
-      { finnish: "Innovaatiot", russian: "внедрять инновации" },
-      { finnish: "Leipomotuotanto", russian: "производство выпечки" },
-      { finnish: "Tuotannon tehokkuus", russian: "эффективность производства" },
-      { finnish: "Resurssienhallinta", russian: "управление ресурсами" },
-      { finnish: "Kustannustehokkuus", russian: "рентабельность" },
-      { finnish: "Brändi-identiteetti", russian: "идентичность бренда" },
-      { finnish: "Kilpailukyky", russian: "конкурентоспособность" },
-      { finnish: "Trendit", russian: "тренды" },
-      { finnish: "Markkinointi", russian: "маркетинг" },
-      { finnish: "Ympäristöystävällisyys", russian: "экологичность" },
-      { finnish: "Kestävät käytännöt", russian: "устойчивые практики" }
+    // Обработка кнопки "Наверх"
+    const backToTopBtn = document.getElementById('back-to-top');
+    window.addEventListener('scroll', function() {
+      if (window.pageYOffset > 300) {
+        backToTopBtn.style.display = 'block';
+      } else {
+        backToTopBtn.style.display = 'none';
+      }
+    });
+    backToTopBtn.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Интерактивный советчик
+    const tips = [
+      "Запасайся консервами – иначе останешься голодным мудаком!",
+      "Фильтры и кипячение воды – радиация не шутит, блять!",
+      "Если мир пошел нахуй, убежище – твоя единственная защита!",
+      "Оружие – не просто штука, это твой билет к выживанию!",
+      "Помни: вместе всегда охуеннее – объединяйся с товарищами!",
+      "Герметичные помещения спасают от радиации – не ленись укреплять убежище!",
+      "Каждая мелочь имеет значение – готовься ко всему, иначе апокалипсис тебя догонит!"
     ];
 
-    let currentWordIndex = Math.floor(Math.random() * vocabulary.length);
+    const generateTipBtn = document.getElementById('generate-tip');
+    const randomTipDiv = document.getElementById('random-tip');
 
-    function showWord() {
-      document.getElementById("wordToTranslate").textContent = vocabulary[currentWordIndex].finnish;
-      document.getElementById("userInput").value = "";
-      document.getElementById("result").textContent = "";
-    }
-
-    function checkAnswer() {
-      const userInput = document.getElementById("userInput").value.toLowerCase();
-      const correctAnswer = vocabulary[currentWordIndex].russian.toLowerCase();
-
-      if (userInput === correctAnswer) {
-        document.getElementById("result").className = "result correct";
-        document.getElementById("result").textContent = "Правильно!";
-      } else {
-        document.getElementById("result").className = "result incorrect";
-        document.getElementById("result").textContent = `Неправильно! Правильный ответ: ${correctAnswer}`;
-      }
-
-      currentWordIndex = Math.floor(Math.random() * vocabulary.length);
-      setTimeout(showWord, 2000);
-    }
-
-    showWord();
+    generateTipBtn.addEventListener('click', function() {
+      const randomIndex = Math.floor(Math.random() * tips.length);
+      randomTipDiv.textContent = tips[randomIndex];
+    });
   </script>
 </body>
 </html>
