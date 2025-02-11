@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Выживание в Ядерной Зиме – Полное Руководство</title>
   <style>
-    /* Подключение локального шрифта Sacramento */
+    /* Подключаем локальный шрифт specialelite-cyrillic.ttf */
     @font-face {
-      font-family: 'Sacramento';
+      font-family: 'SpecialElite';
       src: url('./fonts/specialelite-cyrillic.ttf') format('truetype');
       font-weight: normal;
       font-style: normal;
@@ -19,142 +19,157 @@
       padding: 0;
       box-sizing: border-box;
     }
-
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
     body {
-      font-family: 'Sacramento', sans-serif;
-      background: #121212;
+      font-family: 'SpecialElite', sans-serif;
+      background: linear-gradient(135deg, #1c1c1c, #2e2e2e);
       color: #e0e0e0;
       line-height: 1.6;
       padding: 20px;
     }
-
+    
     header {
       text-align: center;
-      padding: 20px 0;
-      border-bottom: 2px solid #333;
+      padding: 40px 20px;
+      border-bottom: 3px solid #444;
+      margin-bottom: 40px;
     }
-
+    
     header h1 {
-      font-size: 3rem;
+      font-size: 3.5rem;
       color: #ff6f61;
       margin-bottom: 10px;
     }
-
+    
     header p {
       font-size: 1.2rem;
       color: #ccc;
     }
-
+    
     nav {
-      margin-top: 15px;
+      margin-top: 20px;
     }
-
+    
     nav ul {
       list-style: none;
       display: flex;
       justify-content: center;
-      gap: 15px;
+      gap: 20px;
       flex-wrap: wrap;
     }
-
+    
     nav ul li a {
       color: #e0e0e0;
       text-decoration: none;
-      padding: 5px 10px;
+      padding: 8px 15px;
       border: 1px solid transparent;
-      transition: border 0.3s, background 0.3s;
+      transition: all 0.3s ease;
     }
-
+    
     nav ul li a:hover {
       border: 1px solid #ff6f61;
       background: rgba(255, 111, 97, 0.2);
     }
-
+    
     main {
-      max-width: 1000px;
-      margin: 30px auto;
+      max-width: 1100px;
+      margin: 0 auto;
       padding: 0 20px;
     }
-
+    
+    /* Секции изначально невидимы – для анимации появления */
     section {
       margin-bottom: 60px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      padding: 40px 20px;
+      border-bottom: 1px solid #444;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1s ease-out, transform 1s ease-out;
     }
-
+    
+    section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
     section h2 {
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       margin-bottom: 20px;
       color: #ff6f61;
     }
-
+    
     section p {
+      font-size: 1.15rem;
       margin-bottom: 20px;
-      font-size: 1.1rem;
     }
-
+    
     .tip {
       background: #1e1e1e;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+      padding: 25px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.5);
     }
-
+    
     .tip h3 {
-      font-size: 1.8rem;
-      margin-bottom: 10px;
+      font-size: 2rem;
+      margin-bottom: 15px;
       color: #ff9f43;
     }
-
+    
     .tip ul {
       list-style: disc inside;
       margin-left: 20px;
     }
-
+    
     .tip ul li {
-      margin-bottom: 8px;
-      font-size: 1rem;
+      margin-bottom: 10px;
+      font-size: 1.05rem;
     }
-
+    
     .interactive {
       background: #1e1e1e;
-      padding: 20px;
-      border-radius: 8px;
-      margin: 30px 0;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+      padding: 25px;
+      border-radius: 10px;
+      margin: 40px 0;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.5);
     }
-
+    
     .interactive button {
       background: #ff6f61;
       border: none;
-      padding: 12px 20px;
-      font-size: 1rem;
+      padding: 15px 25px;
+      font-size: 1.2rem;
       color: #fff;
       border-radius: 5px;
       cursor: pointer;
       transition: background 0.3s, transform 0.3s;
     }
-
+    
     .interactive button:hover {
       background: #ff8f81;
       transform: scale(1.05);
     }
-
+    
     #random-tip {
-      margin-top: 15px;
-      font-size: 1.2rem;
+      margin-top: 20px;
+      font-size: 1.3rem;
       color: #ffeb3b;
     }
-
+    
     footer {
       text-align: center;
-      padding: 20px 0;
-      border-top: 2px solid #333;
-      font-size: 0.9rem;
+      padding: 30px 20px;
+      border-top: 3px solid #444;
+      font-size: 1rem;
       color: #888;
+      margin-top: 40px;
     }
-
+    
     /* Кнопка "Наверх" */
     #back-to-top {
       position: fixed;
@@ -163,17 +178,17 @@
       background: #ff6f61;
       color: #fff;
       border: none;
-      padding: 12px 18px;
+      padding: 15px 20px;
       border-radius: 5px;
       cursor: pointer;
       font-size: 1rem;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
       opacity: 0.8;
       transition: opacity 0.3s, transform 0.3s;
       display: none;
       z-index: 100;
     }
-
+    
     #back-to-top:hover {
       opacity: 1;
       transform: scale(1.05);
@@ -201,7 +216,7 @@
     <section id="introduction">
       <h2>Вступление</h2>
       <p>
-        Привет, дружище! Если ты здесь, значит, ты осознаешь, что мир может рухнуть, и наступит настоящий апокалипсис. Ядерная зима — не шутка, и если мир пошел нахуй, тебе придется быть готовым ко всему.
+        Привет, дружище! Если ты здесь, значит, ты понимаешь, что мир может рухнуть в любой момент. Ядерная зима – это не шутка, и если мир пошел нахуй, тебе придется быть наготове ко всему.
       </p>
     </section>
 
@@ -209,19 +224,19 @@
     <section id="planning">
       <h2>Планирование и Подготовка</h2>
       <p>
-        Подготовка — это не просто запас консервов, а целая философия выживания в экстремальных условиях. Найди убежище, оборудуй подземный бункер или старое советское здание, чтобы защитить себя от радиации и холода.
+        Подготовка – это не просто запас консервов, а философия выживания в экстремальных условиях. Найди убежище, оборудуй подземный бункер или старое советское здание, чтобы защитить себя от радиации и ледяного холода.
       </p>
       <div class="tip">
         <h3>Подготовься заранее!</h3>
         <ul>
-          <li>Запасай консервами, сухпайками и сублиматами.</li>
-          <li>Найди или оборудуй надежный подземный бункер.</li>
+          <li>Запасайся консервами, сухпайками и сублиматами – чтобы не остаться голодным мудаком.</li>
+          <li>Оборудуй надежный подземный бункер.</li>
           <li>Подготовь фильтры для воды, противогазы и аптечку.</li>
-          <li>Учись обращаться с оружием — без него никуда!</li>
+          <li>Учись обращаться с оружием – без него никуда!</li>
         </ul>
       </div>
       <p>
-        Не жди, пока всё пойдет по пизде — начни подготовку уже сегодня!
+        Не жди, пока всё пойдет по пизде – начинай подготовку уже сегодня!
       </p>
     </section>
 
@@ -241,15 +256,15 @@
         <ul>
           <li><strong>Консервы и сухпайки:</strong> Запасай всё, что может храниться годами.</li>
           <li><strong>Выращивание еды:</strong> Организуй подземные фермы для грибов и водорослей.</li>
-          <li><strong>Охота и ловушки:</strong> Мыши, крысы и дикая дичь пригодятся, если природа еще не рухнула.</li>
+          <li><strong>Охота и ловушки:</strong> Мыши, крысы и дикая дичь пригодятся, если природа ещё не рухнула.</li>
         </ul>
       </div>
       <div class="tip">
         <h3>3. Вода и Гигиена</h3>
         <ul>
-          <li><strong>Фильтрация и кипячение:</strong> Обязательно очищай воду — радиация не шутит!</li>
+          <li><strong>Фильтрация и кипячение:</strong> Обязательно очищай воду – радиация не шутит, блять!</li>
           <li><strong>Сбор влаги:</strong> Используй гигроскопичные материалы для сбора конденсата.</li>
-          <li><strong>Гигиена:</strong> Чистота спасает, инфекции могут убить так же быстро, как радиация.</li>
+          <li><strong>Гигиена:</strong> Чистота спасает – инфекции могут убить так же быстро, как радиация.</li>
         </ul>
       </div>
       <div class="tip">
@@ -263,8 +278,8 @@
       <div class="tip">
         <h3>5. Радиация</h3>
         <ul>
-          <li><strong>Герметичные помещения:</strong> Чем меньше радиация попадет внутрь, тем дольше прослужит твоя защита.</li>
-          <li><strong>Противогаз и йод:</strong> Защити щитовидку — это критически важно.</li>
+          <li><strong>Герметичные помещения:</strong> Чем меньше радиация попадет внутрь, тем дольше прослужит защита.</li>
+          <li><strong>Противогаз и йод:</strong> Защити щитовидку – это критически важно.</li>
           <li><strong>Измерительные приборы:</strong> Регулярно проверяй уровень радиации, чтобы не оказаться на светящейся хуйней.</li>
         </ul>
       </div>
@@ -287,16 +302,16 @@
     <section id="additional">
       <h2>Дополнительные Материалы и Рассуждения</h2>
       <p>
-        Здесь ты найдешь не только практические советы, но и глубокие размышления о том, как можно выжить в условиях полного хаоса. Выживание — это не только физическая борьба, но и интеллектуальная, моральная и психологическая одиссея.
+        Здесь ты найдёшь не только практические советы, но и глубокие размышления о том, как выжить в условиях полного хаоса. Выживание – это не только физическая борьба, но и интеллектуальная, моральная и психологическая одиссея.
       </p>
       <p>
-        Каждое твое решение — это выбор между жизнью и смертью. Каждая мелочь может сыграть решающую роль, когда мир вокруг превратится в ледяной, радиационный ад.
+        Каждое твое решение – это выбор между жизнью и смертью. Каждая мелочь может сыграть решающую роль, когда мир вокруг превратится в ледяной, радиационный ад.
       </p>
       <p>
-        <strong>Интересный факт:</strong> Многие ученые до сих пор спорят, сможет ли человечество пережить ядерную зиму. Но если мы соберем все свои знания, смекалку и боевой настрой, мы точно не окажемся на светящейся хуйней.
+        <strong>Интересный факт:</strong> Многие учёные до сих пор спорят, сможет ли человечество пережить ядерную зиму. Но если мы соберём все свои знания, смекалку и боевой настрой, мы точно не окажемся на светящейся хуйней.
       </p>
       <p>
-        Изучай, экспериментируй и будь готов к худшему — только так можно победить апокалипсис. Помни: даже если мир идет нахуй, твоя жизнь в твоих руках.
+        Изучай, экспериментируй и будь готов к худшему – только так можно победить апокалипсис. Помни: даже если мир идёт нахуй, твоя жизнь в твоих руках.
       </p>
     </section>
 
@@ -304,10 +319,10 @@
     <section id="conclusion">
       <h2>Заключение</h2>
       <p>
-        Выживание в ядерной зиме — это марафон, а не спринт. Здесь собраны советы и рассуждения, от которых твоя жизнь зависит. Смекалка, подготовка и правильное снаряжение — твои лучшие союзники в этом постапокалиптическом аду.
+        Выживание в ядерной зиме – это марафон, а не спринт. Здесь собраны советы и рассуждения, от которых твоя жизнь зависит. Смекалка, подготовка и правильное снаряжение – твои лучшие союзники в этом постапокалиптическом аду.
       </p>
       <p>
-        Если всё пойдет по пизде, найди хорошую компанию, налей последнюю бутылку водки и встреть апокалипсис с достоинством и охуительным настроем!
+        Если всё пойдёт по пизде, найди хорошую компанию, налей последнюю бутылку водки и встреть апокалипсис с достоинством и охуительным настроем!
       </p>
     </section>
   </main>
@@ -331,6 +346,25 @@
     
     backToTopBtn.addEventListener('click', function() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    
+    // Анимация появления секций при прокрутке
+    const sections = document.querySelectorAll('section');
+    const observerOptions = {
+      threshold: 0.2
+    };
+    
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    sections.forEach(section => {
+      observer.observe(section);
     });
     
     // Интерактивный советчик
