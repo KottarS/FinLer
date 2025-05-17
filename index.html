@@ -2,76 +2,87 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>3D 2048</title>
     <style>
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: manipulation;
         }
 
         body {
-            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
         }
 
-        .game-container {
+        .game-wrapper {
+            width: 90vw;
+            max-width: 500px;
+            aspect-ratio: 1/1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             perspective: 1000px;
-            padding: 40px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .scoreboard {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 2vh;
+        }
+
+        .scoreboard h1 {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            color: #333;
+            margin-bottom: 0.5vh;
+        }
+
+        .score {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: #555;
         }
 
         .grid {
-            display: grid;
-            grid-template-columns: repeat(4, 100px);
-            grid-template-rows: repeat(4, 100px);
-            gap: 15px;
+            width: 100%;
+            aspect-ratio: 1/1;
+            position: relative;
             transform-style: preserve-3d;
         }
 
         .tile {
-            width: 100px;
-            height: 100px;
+            position: absolute;
+            width: 22%;
+            aspect-ratio: 1/1;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            font-size: 24px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            transform: rotateX(0deg) rotateY(0deg) translateZ(0px);
+            font-size: clamp(1rem, 5vw, 2rem);
+            border-radius: 10%;
+            box-shadow: 0 3vw 6vw rgba(0,0,0,0.2);
+            transition: all 0.2s ease-in-out;
             backface-visibility: hidden;
-            position: absolute;
-            opacity: 0;
-            animation: pop 0.3s ease forwards;
-        }
-
-        @keyframes pop {
-            from { transform: scale(0.8) translateZ(-50px); opacity: 0; }
-            to { transform: scale(1) translateZ(0px); opacity: 1; }
+            will-change: transform;
         }
 
         .tile::before {
             content: '';
             position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 10px;
-            box-shadow: inset 0 0 10px rgba(255,255,255,0.3), 
-                        inset 0 0 20px rgba(0,0,0,0.1),
-                        0 5px 15px rgba(0,0,0,0.1);
+            inset: 0;
+            border-radius: 10%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), transparent 70%);
+            opacity: 0.2;
             pointer-events: none;
         }
 
+        /* Цвета плиток */
         .tile-2 { background: #eee4da; color: #776e65; }
         .tile-4 { background: #ede0c8; color: #776e65; }
         .tile-8 { background: #f2b179; color: #f9f6f2; }
@@ -85,62 +96,54 @@
         .tile-2048 { background: #edc22e; color: #f9f6f2; }
 
         .tile[data-value] {
-            position: absolute;
-            animation: pop 0.3s ease forwards;
+            animation: pop 0.3s ease-in-out;
         }
 
-        .scoreboard {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .scoreboard h1 {
-            font-size: 2.5em;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .score {
-            font-size: 1.2em;
-            color: #666;
+        @keyframes pop {
+            0% { transform: scale(0.8) rotateX(0deg) rotateY(0deg); }
+            50% { transform: scale(1.05) rotateX(2deg) rotateY(2deg); }
+            100% { transform: scale(1) rotateX(0deg) rotateY(0deg); }
         }
 
         .game-over {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(235, 235, 235, 0.8);
+            inset: 0;
+            background: rgba(235, 235, 235, 0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 2em;
+            font-size: clamp(1.2rem, 5vw, 2rem);
             color: #333;
-            border-radius: 20px;
             z-index: 10;
+            border-radius: 10%;
         }
 
         .game-over button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
+            margin-top: 4vh;
+            padding: 2vh 4vw;
+            font-size: clamp(1rem, 3vw, 1.2rem);
             border: none;
-            border-radius: 10px;
+            border-radius: 8%;
             background: #333;
             color: #fff;
             cursor: pointer;
             transition: background 0.3s ease;
+            touch-action: manipulation;
         }
 
         .game-over button:hover {
             background: #555;
         }
+
+        @media (max-width: 480px) {
+            .scoreboard h1 { font-size: 1.8rem; }
+            .score { font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
-    <div class="game-container">
+    <div class="game-wrapper">
         <div class="scoreboard">
             <h1>3D 2048</h1>
             <div class="score">Счет: <span id="score">0</span></div>
@@ -158,6 +161,7 @@
         const gameOver = document.getElementById('gameOver');
         let tiles = [];
         let score = 0;
+        let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         function createGrid() {
             grid.innerHTML = '';
@@ -176,20 +180,29 @@
         }
 
         function updateGrid() {
-            // Remove existing tiles
+            const rect = grid.getBoundingClientRect();
+            const tileSize = rect.width / 4;
+            
+            // Удаление существующих плиток
             const existingTiles = document.querySelectorAll('.tile');
             existingTiles.forEach(tile => tile.remove());
 
-            // Create new tiles
+            // Создание новых плиток
             tiles.forEach(tile => {
                 if (tile.value > 0) {
                     const tileElement = document.createElement('div');
-                    tileElement.classList.add('tile');
-                    tileElement.classList.add(`tile-${tile.value}`);
+                    tileElement.className = `tile tile-${tile.value}`;
                     tileElement.textContent = tile.value;
-                    tileElement.style.left = `${tile.x * 115}px`;
-                    tileElement.style.top = `${tile.y * 115}px`;
-                    tileElement.style.transform = `rotateX(${Math.random() * 10 - 5}deg) rotateY(${Math.random() * 10 - 5}deg) translateZ(${Math.random() * 10}px)`;
+                    
+                    // Позиционирование с учетом размеров
+                    tileElement.style.left = `${tile.x * 25}%`;
+                    tileElement.style.top = `${tile.y * 25}%`;
+                    
+                    // 3D-эффект
+                    const rotateX = (Math.random() - 0.5) * 4;
+                    const rotateY = (Math.random() - 0.5) * 4;
+                    tileElement.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(${Math.random() * 5}px)`;
+                    
                     grid.appendChild(tileElement);
                 }
             });
@@ -205,17 +218,19 @@
 
         function move(direction) {
             let moved = false;
-            let originalState = JSON.stringify(tiles);
+            let originalState = JSON.stringify(tiles.map(t => t.value));
 
-            // Normalize direction
+            // Определение направления
             let dx = 0, dy = 0;
-            if (direction === 'ArrowLeft') dx = -1;
-            if (direction === 'ArrowRight') dx = 1;
-            if (direction === 'ArrowUp') dy = -1;
-            if (direction === 'ArrowDown') dy = 1;
+            switch(direction) {
+                case 'left': dx = -1; break;
+                case 'right': dx = 1; break;
+                case 'up': dy = -1; break;
+                case 'down': dy = 1; break;
+            }
 
-            // Process movement
-            for (let step = 0; step < 3; step++) {
+            // Объединение и движение
+            for (let step = 0; step < 4; step++) {
                 moved = false;
                 tiles.forEach(tile => {
                     if (tile.value === 0) return;
@@ -251,11 +266,18 @@
                 });
 
                 if (!moved && step === 0) break;
-                updateGrid();
+                tiles.sort((a, b) => {
+                    if (dx === -1 || dy === -1) {
+                        return (a.x - b.x) || (a.y - b.y);
+                    } else {
+                        return (b.x - a.x) || (b.y - a.y);
+                    }
+                });
             }
 
-            if (moved) {
+            if (moved && originalState !== JSON.stringify(tiles.map(t => t.value))) {
                 addRandomTile();
+                updateGrid();
                 checkGameOver();
             }
         }
@@ -278,10 +300,43 @@
             }
         }
 
+        // Обработка клавиш
         document.addEventListener('keydown', (e) => {
             if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
                 e.preventDefault();
-                move(e.key);
+                const directionMap = {
+                    'ArrowLeft': 'left',
+                    'ArrowRight': 'right',
+                    'ArrowUp': 'up',
+                    'ArrowDown': 'down'
+                };
+                move(directionMap[e.key]);
+            }
+        });
+
+        // Обработка сенсорных жестов
+        let startX = 0, startY = 0;
+        
+        grid.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }
+        });
+
+        grid.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 1) {
+                const endX = e.changedTouches[0].clientX;
+                const endY = e.changedTouches[0].clientY;
+                
+                const diffX = endX - startX;
+                const diffY = endY - startY;
+                
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+                    move(diffX > 0 ? 'right' : 'left');
+                } else if (Math.abs(diffY) > 30) {
+                    move(diffY > 0 ? 'down' : 'up');
+                }
             }
         });
 
@@ -289,6 +344,7 @@
             createGrid();
         }
 
+        // Инициализация
         createGrid();
     </script>
 </body>
