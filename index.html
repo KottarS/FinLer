@@ -1,425 +1,295 @@
-Давайте улучшим и дополним ваш сайт, добавив некоторые элементы для улучшения пользовательского интерфейса и функциональности. Вот обновленный код:
-
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Выживание в Ядерной Зиме – Полное Руководство</title>
-  <style>
-    /* Подключаем локальный шрифт specialelite-cyrillic.ttf */
-    @font-face {
-      font-family: 'SpecialElite';
-      src: url('./fonts/specialelite-cyrillic.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 2048</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    /* Сброс стилей */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+        body {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
 
-    html {
-      scroll-behavior: smooth;
-    }
+        .game-container {
+            perspective: 1000px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
 
-    body {
-      font-family: 'SpecialElite', sans-serif;
-      background: linear-gradient(135deg, #1c1c1c, #2e2e2e);
-      color: #e0e0e0;
-      line-height: 1.6;
-      padding: 20px;
-    }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-template-rows: repeat(4, 100px);
+            gap: 15px;
+            transform-style: preserve-3d;
+        }
 
-    header {
-      text-align: center;
-      padding: 40px 20px;
-      border-bottom: 3px solid #444;
-      margin-bottom: 40px;
-    }
+        .tile {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 24px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            transform: rotateX(0deg) rotateY(0deg) translateZ(0px);
+            backface-visibility: hidden;
+            position: absolute;
+            opacity: 0;
+            animation: pop 0.3s ease forwards;
+        }
 
-    header h1 {
-      font-size: 3.5rem;
-      color: #ff6f61;
-      margin-bottom: 10px;
-    }
+        @keyframes pop {
+            from { transform: scale(0.8) translateZ(-50px); opacity: 0; }
+            to { transform: scale(1) translateZ(0px); opacity: 1; }
+        }
 
-    header p {
-      font-size: 1.2rem;
-      color: #ccc;
-    }
+        .tile::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.3), 
+                        inset 0 0 20px rgba(0,0,0,0.1),
+                        0 5px 15px rgba(0,0,0,0.1);
+            pointer-events: none;
+        }
 
-    nav {
-      margin-top: 20px;
-    }
+        .tile-2 { background: #eee4da; color: #776e65; }
+        .tile-4 { background: #ede0c8; color: #776e65; }
+        .tile-8 { background: #f2b179; color: #f9f6f2; }
+        .tile-16 { background: #f59563; color: #f9f6f2; }
+        .tile-32 { background: #f67c5f; color: #f9f6f2; }
+        .tile-64 { background: #f65e3b; color: #f9f6f2; }
+        .tile-128 { background: #edcf72; color: #f9f6f2; }
+        .tile-256 { background: #edcc61; color: #f9f6f2; }
+        .tile-512 { background: #edc850; color: #f9f6f2; }
+        .tile-1024 { background: #edc53f; color: #f9f6f2; }
+        .tile-2048 { background: #edc22e; color: #f9f6f2; }
 
-    nav ul {
-      list-style: none;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
+        .tile[data-value] {
+            position: absolute;
+            animation: pop 0.3s ease forwards;
+        }
 
-    nav ul li a {
-      color: #e0e0e0;
-      text-decoration: none;
-      padding: 8px 15px;
-      border: 1px solid transparent;
-      transition: all 0.3s ease;
-    }
+        .scoreboard {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-    nav ul li a:hover {
-      border: 1px solid #ff6f61;
-      background: rgba(255, 111, 97, 0.2);
-    }
+        .scoreboard h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
 
-    main {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
+        .score {
+            font-size: 1.2em;
+            color: #666;
+        }
 
-    /* Секции изначально невидимы – для анимации появления */
-    section {
-      margin-bottom: 60px;
-      padding: 40px 20px;
-      border-bottom: 1px solid #444;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 1s ease-out, transform 1s ease-out;
-    }
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(235, 235, 235, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            color: #333;
+            border-radius: 20px;
+            z-index: 10;
+        }
 
-    section.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+        .game-over button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 10px;
+            background: #333;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
 
-    section h2 {
-      font-size: 2.8rem;
-      margin-bottom: 20px;
-      color: #ff6f61;
-    }
-
-    section p {
-      font-size: 1.15rem;
-      margin-bottom: 20px;
-    }
-
-    .tip {
-      background: #1e1e1e;
-      padding: 25px;
-      border-radius: 10px;
-      margin-bottom: 25px;
-      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.5);
-    }
-
-    .tip h3 {
-      font-size: 2rem;
-      margin-bottom: 15px;
-      color: #ff9f43;
-    }
-
-    .tip ul {
-      list-style: disc inside;
-      margin-left: 20px;
-    }
-
-    .tip ul li {
-      margin-bottom: 10px;
-      font-size: 1.05rem;
-    }
-
-    .interactive {
-      background: #1e1e1e;
-      padding: 25px;
-      border-radius: 10px;
-      margin: 40px 0;
-      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.5);
-    }
-
-    .interactive button {
-      background: #ff6f61;
-      border: none;
-      padding: 15px 25px;
-      font-size: 1.2rem;
-      color: #fff;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.3s, transform 0.3s;
-    }
-
-    .interactive button:hover {
-      background: #ff8f81;
-      transform: scale(1.05);
-    }
-
-    #random-tip {
-      margin-top: 20px;
-      font-size: 1.3rem;
-      color: #ffeb3b;
-    }
-
-    footer {
-      text-align: center;
-      padding: 30px 20px;
-      border-top: 3px solid #444;
-      font-size: 1rem;
-      color: #888;
-      margin-top: 40px;
-    }
-
-    /* Кнопка "Наверх" */
-    #back-to-top {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      background: #ff6f61;
-      color: #fff;
-      border: none;
-      padding: 15px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1rem;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-      opacity: 0.8;
-      transition: opacity 0.3s, transform 0.3s;
-      display: none;
-      z-index: 100;
-    }
-
-    #back-to-top:hover {
-      opacity: 1;
-      transform: scale(1.05);
-    }
-
-    /* Социальные кнопки */
-    .social-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .social-buttons a {
-      color: #fff;
-      font-size: 1.5rem;
-      transition: color 0.3s;
-    }
-
-    .social-buttons a:hover {
-      color: #ff6f61;
-    }
-  </style>
+        .game-over button:hover {
+            background: #555;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>Выживание в Ядерной Зиме</h1>
-    <p>Полное руководство по выживанию в постапокалиптическом аду. Если мир пошел нахуй – ты не сдохнешь первым!</p>
-    <nav>
-      <ul>
-        <li><a href="#introduction">Вступление</a></li>
-        <li><a href="#planning">Планирование</a></li>
-        <li><a href="#tips">Советы</a></li>
-        <li><a href="#interactive">Советчик</a></li>
-        <li><a href="#additional">Дополнительно</a></li>
-        <li><a href="#conclusion">Заключение</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main>
-    <!-- Вступление -->
-    <section id="introduction">
-      <h2>Вступление</h2>
-      <p>
-        Привет, дружище! Если ты здесь, значит, ты понимаешь, что мир может рухнуть в любой момент. Ядерная зима – это не шутка, и если мир пошел нахуй, тебе придется быть наготове ко всему.
-      </p>
-    </section>
-
-    <!-- Планирование и подготовка -->
-    <section id="planning">
-      <h2>Планирование и Подготовка</h2>
-      <p>
-        Подготовка – это не просто запас консервов, а философия выживания в экстремальных условиях. Найди убежище, оборудуй подземный бункер или старое советское здание, чтобы защитить себя от радиации и ледяного холода.
-      </p>
-      <div class="tip">
-        <h3>Подготовься заранее!</h3>
-        <ul>
-          <li>Запасайся консервами, сухпайками и сублиматами – чтобы не остаться голодным мудаком.</li>
-          <li>Оборудуй надежный подземный бункер.</li>
-          <li>Подготовь фильтры для воды, противогазы и аптечку.</li>
-          <li>Учись обращаться с оружием – без него никуда!</li>
-        </ul>
-      </div>
-      <p>
-        Не жди, пока всё пойдет по пизде – начинай подготовку уже сегодня!
-      </p>
-    </section>
-
-    <!-- Советы по выживанию -->
-    <section id="tips">
-      <h2>Советы по Выживанию</h2>
-      <div class="tip">
-        <h3>1. Обустройство убежища</h3>
-        <ul>
-          <li><strong>Подземные бункеры:</strong> Лучшее укрытие от радиации и холода.</li>
-          <li><strong>Метро и шахты:</strong> Глубокие подземелья защитят тебя от внешних угроз.</li>
-          <li><strong>Толстостенные здания:</strong> Надежное временное убежище, если других вариантов нет.</li>
-        </ul>
-      </div>
-      <div class="tip">
-        <h3>2. Продовольствие</h3>
-        <ul>
-          <li><strong>Консервы и сухпайки:</strong> Запасай всё, что может храниться годами.</li>
-          <li><strong>Выращивание еды:</strong> Организуй подземные фермы для грибов и водорослей.</li>
-          <li><strong>Охота и ловушки:</strong> Мыши, крысы и дикая дичь пригодятся, если природа ещё не рухнула.</li>
-        </ul>
-      </div>
-      <div class="tip">
-        <h3>3. Вода и Гигиена</h3>
-        <ul>
-          <li><strong>Фильтрация и кипячение:</strong> Обязательно очищай воду – радиация не шутит, блять!</li>
-          <li><strong>Сбор влаги:</strong> Используй гигроскопичные материалы для сбора конденсата.</li>
-          <li><strong>Гигиена:</strong> Чистота спасает – инфекции могут убить так же быстро, как радиация.</li>
-        </ul>
-      </div>
-      <div class="tip">
-        <h3>4. Защита и Оборона</h3>
-        <ul>
-          <li><strong>Оружие:</strong> Огнестрел, холодное оружие или самодельные ловушки защитят тебя от мародёров.</li>
-          <li><strong>Защита убежища:</strong> Укрепляй стены, устанавливай сигнализацию и готовься к нападениям.</li>
-          <li><strong>Тактические решения:</strong> Иногда лучше отступить, чем ввязываться в бессмысленный конфликт.</li>
-        </ul>
-      </div>
-      <div class="tip">
-        <h3>5. Радиация</h3>
-        <ul>
-          <li><strong>Герметичные помещения:</strong> Чем меньше радиация попадет внутрь, тем дольше прослужит защита.</li>
-          <li><strong>Противогаз и йод:</strong> Защити щитовидку – это критически важно.</li>
-          <li><strong>Измерительные приборы:</strong> Регулярно проверяй уровень радиации, чтобы не оказаться на светящейся хуйней.</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- Интерактивный советчик -->
-    <section id="interactive">
-      <h2>Интерактивный Советчик</h2>
-      <div class="interactive">
-        <p>Нажми на кнопку, чтобы получить случайный охуенный совет для выживания в ядерной зиме!</p>
-        <button id="generate-tip">Дай совет</button>
-        <div id="random-tip"></div>
-      </div>
-      <p>
-        Этот советчик подзарядит тебя мотивацией и напомнит, что даже в самом жёстком апокалипсисе можно найти причину для борьбы.
-      </p>
-    </section>
-
-    <!-- Дополнительные материалы и рассуждения -->
-    <section id="additional">
-      <h2>Дополнительные Материалы и Рассуждения</h2>
-      <p>
-        Здесь ты найдёшь не только практические советы, но и глубокие размышления о том, как выжить в условиях полного хаоса. Выживание – это не только физическая борьба, но и интеллектуальная, моральная и психологическая одиссея.
-      </p>
-      <p>
-        Каждое твое решение – это выбор между жизнью и смертью. Каждая мелочь может сыграть решающую роль, когда мир вокруг превратится в ледяной, радиационный ад.
-      </p>
-      <p>
-        <strong>Интересный факт:</strong> Многие учёные до сих пор спорят, сможет ли человечество пережить ядерную зиму. Но если мы соберём все свои знания, смекалку и боевой настрой, мы точно не окажемся на светящейся хуйней.
-      </p>
-      <p>
-        Изучай, экспериментируй и будь готов к худшему – только так можно победить апокалипсис. Помни: даже если мир идёт нахуй, твоя жизнь в твоих руках.
-      </p>
-    </section>
-
-    <!-- Заключение -->
-    <section id="conclusion">
-      <h2>Заключение</h2>
-      <p>
-        Выживание в ядерной зиме – это марафон, а не спринт. Здесь собраны советы и рассуждения, от которых твоя жизнь зависит. Смекалка, подготовка и правильное снаряжение – твои лучшие союзники в этом постапокалиптическом аду.
-      </p>
-      <p>
-        Если всё пойдёт по пизде, найди хорошую компанию, налей последнюю бутылку водки и встреть апокалипсис с достоинством и охуительным настроем!
-      </p>
-    </section>
-  </main>
-
-  <footer>
-    <p>&copy; 2025 Постапокалиптический Выживальщик. Все права защищены.</p>
-    <div class="social-buttons">
-      <a href="https://facebook.com" aria-label="Facebook">📘</a>
-      <a href="https://twitter.com" aria-label="Twitter">🐦</a>
-      <a href="https://instagram.com" aria-label="Instagram">📸</a>
+    <div class="game-container">
+        <div class="scoreboard">
+            <h1>3D 2048</h1>
+            <div class="score">Счет: <span id="score">0</span></div>
+        </div>
+        <div class="grid" id="grid"></div>
+        <div class="game-over" id="gameOver" style="display: none;">
+            <div>Игра окончена!</div>
+            <button onclick="restartGame()">Начать заново</button>
+        </div>
     </div>
-  </footer>
 
-  <button id="back-to-top">Наверх</button>
+    <script>
+        const grid = document.getElementById('grid');
+        const scoreDisplay = document.getElementById('score');
+        const gameOver = document.getElementById('gameOver');
+        let tiles = [];
+        let score = 0;
 
-  <script>
-    // Обработка кнопки "Наверх"
-    const backToTopBtn = document.getElementById('back-to-top');
-    window.addEventListener('scroll', function() {
-      if (window.pageYOffset > 300) {
-        backToTopBtn.style.display = 'block';
-      } else {
-        backToTopBtn.style.display = 'none';
-      }
-    });
+        function createGrid() {
+            grid.innerHTML = '';
+            tiles = [];
+            score = 0;
+            scoreDisplay.textContent = score;
+            gameOver.style.display = 'none';
 
-    backToTopBtn.addEventListener('click', function() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+            for (let i = 0; i < 16; i++) {
+                tiles.push({ value: 0, x: i % 4, y: Math.floor(i / 4) });
+            }
 
-    // Анимация появления секций при прокрутке
-    const sections = document.querySelectorAll('section');
-    const observerOptions = {
-      threshold: 0.2
-    };
-
-    const observer = new IntersectionObserver((entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
+            addRandomTile();
+            addRandomTile();
+            updateGrid();
         }
-      });
-    }, observerOptions);
 
-    sections.forEach(section => {
-      observer.observe(section);
-    });
+        function updateGrid() {
+            // Remove existing tiles
+            const existingTiles = document.querySelectorAll('.tile');
+            existingTiles.forEach(tile => tile.remove());
 
-    // Интерактивный советчик
-    const tips = [
-      "Запасайся консервами – иначе останешься голодным мудаком!",
-      "Фильтры и кипячение воды – радиация не шутит, блять!",
-      "Если мир пошел нахуй, убежище – твоя единственная защита!",
-      "Оружие – не просто штука, это твой билет к выживанию!",
-      "Помни: вместе всегда охуеннее – объединяйся с товарищами!",
-      "Герметичные помещения спасают от радиации – не ленись укреплять убежище!",
-      "Каждая мелочь имеет значение – готовься ко всему, иначе апокалипсис тебя догонит!"
-    ];
+            // Create new tiles
+            tiles.forEach(tile => {
+                if (tile.value > 0) {
+                    const tileElement = document.createElement('div');
+                    tileElement.classList.add('tile');
+                    tileElement.classList.add(`tile-${tile.value}`);
+                    tileElement.textContent = tile.value;
+                    tileElement.style.left = `${tile.x * 115}px`;
+                    tileElement.style.top = `${tile.y * 115}px`;
+                    tileElement.style.transform = `rotateX(${Math.random() * 10 - 5}deg) rotateY(${Math.random() * 10 - 5}deg) translateZ(${Math.random() * 10}px)`;
+                    grid.appendChild(tileElement);
+                }
+            });
+        }
 
-    const generateTipBtn = document.getElementById('generate-tip');
-    const randomTipDiv = document.getElementById('random-tip');
+        function addRandomTile() {
+            const emptyTiles = tiles.filter(tile => tile.value === 0);
+            if (emptyTiles.length === 0) return;
+            const randomTile = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+            randomTile.value = Math.random() < 0.9 ? 2 : 4;
+            updateGrid();
+        }
 
-    generateTipBtn.addEventListener('click', function() {
-      const randomIndex = Math.floor(Math.random() * tips.length);
-      randomTipDiv.textContent = tips[randomIndex];
-    });
-  </script>
+        function move(direction) {
+            let moved = false;
+            let originalState = JSON.stringify(tiles);
+
+            // Normalize direction
+            let dx = 0, dy = 0;
+            if (direction === 'ArrowLeft') dx = -1;
+            if (direction === 'ArrowRight') dx = 1;
+            if (direction === 'ArrowUp') dy = -1;
+            if (direction === 'ArrowDown') dy = 1;
+
+            // Process movement
+            for (let step = 0; step < 3; step++) {
+                moved = false;
+                tiles.forEach(tile => {
+                    if (tile.value === 0) return;
+
+                    let newX = tile.x;
+                    let newY = tile.y;
+
+                    while (true) {
+                        const targetX = newX + dx;
+                        const targetY = newY + dy;
+
+                        if (targetX < 0 || targetX >= 4 || targetY < 0 || targetY >= 4) break;
+
+                        const targetTile = tiles.find(t => t.x === targetX && t.y === targetY);
+                        
+                        if (targetTile.value === 0) {
+                            targetTile.value = tile.value;
+                            tile.value = 0;
+                            newX = targetX;
+                            newY = targetY;
+                            moved = true;
+                        } else if (targetTile.value === tile.value) {
+                            targetTile.value *= 2;
+                            score += targetTile.value;
+                            scoreDisplay.textContent = score;
+                            tile.value = 0;
+                            moved = true;
+                            break;
+                        } else {
+                            break;
+                        }
+                    }
+                });
+
+                if (!moved && step === 0) break;
+                updateGrid();
+            }
+
+            if (moved) {
+                addRandomTile();
+                checkGameOver();
+            }
+        }
+
+        function checkGameOver() {
+            if (tiles.every(tile => tile.value !== 0)) {
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        const current = tiles.find(t => t.x === i && t.y === j);
+                        const right = tiles.find(t => t.x === i + 1 && t.y === j);
+                        const down = tiles.find(t => t.x === i && t.y === j + 1);
+
+                        if ((right && current.value === right.value) || 
+                            (down && current.value === down.value)) {
+                            return;
+                        }
+                    }
+                }
+                gameOver.style.display = 'flex';
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+                move(e.key);
+            }
+        });
+
+        function restartGame() {
+            createGrid();
+        }
+
+        createGrid();
+    </script>
 </body>
 </html>
-```
-
-### Основные изменения:
-1. **Социальные кнопки:** Добавлены ссылки на социальные сети в футере.
-2. **Улучшенная навигация:** Добавлены стили для кнопок навигации.
-3. **Анимации:** Улучшена анимация появления секций.
-4. **Интерактивность:** Добавлены дополнительные советы в интерактивный советчик.
-
-Эти изменения помогут сделать ваш сайт более интерактивным и удобным для пользователей.
